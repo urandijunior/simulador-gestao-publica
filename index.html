@@ -594,7 +594,30 @@ h1, h2, h3, h4, .display {
     </div>
 
     <div class="nav-bar">
-      <button class="btn btn-primary" onclick="showMuni()">Escolher município →</button>
+      <button class="btn btn-primary" onclick="showIdent()">Começar exercício →</button>
+    </div>
+  </div>
+
+
+  <!-- ══ TELA 1B: IDENTIFICAÇÃO ══ -->
+  <div id="s-ident" class="screen">
+    <div style="padding:2.5rem 0 1.5rem">
+      <span class="welcome-tag">Antes de começar</span>
+      <h2 style="font-size:1.6rem;margin-bottom:.5rem">Sua identificação</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:1.75rem">Informe seu nome completo. Ele será incluído no arquivo de resultado que você enviará ao professor.</p>
+    </div>
+    <div style="max-width:420px">
+      <label style="font-family:Syne,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);display:block;margin-bottom:.5rem">Nome completo</label>
+      <input type="text" id="inp-nome" placeholder="Ex: Maria Fernanda Souza"
+        style="width:100%;padding:.75rem 1rem;border:1px solid var(--border-strong);border-radius:8px;font-family:DM Sans,sans-serif;font-size:15px;background:var(--surface);color:var(--text);margin-bottom:1.25rem"
+        oninput="document.getElementById('btn-para-muni').disabled=this.value.trim().length<3">
+      <label style="font-family:Syne,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);display:block;margin-bottom:.5rem">Turma / Período (opcional)</label>
+      <input type="text" id="inp-turma" placeholder="Ex: Adm 2024 — Noturno"
+        style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:15px;background:var(--surface);color:var(--text);margin-bottom:1.5rem">
+    </div>
+    <div class="nav-bar">
+      <button class="btn" onclick="showWelcome()">← Voltar</button>
+      <button class="btn btn-primary" id="btn-para-muni" disabled onclick="showMuni()">Escolher município →</button>
     </div>
   </div>
 
@@ -865,6 +888,8 @@ const AREA_BADGE = {
 
 // ══ ESTADO ══
 let muniIdx = null;
+let alunoNome = '';
+let alunoTurma = '';
 let decAtual = 0;
 let respostas = new Array(DECISOES.length).fill(null);
 
@@ -873,7 +898,16 @@ function showWelcome(){
   setScreen('s-welcome');
   document.getElementById('progress-wrap').style.display='none';
 }
+
+function showIdent(){
+  setScreen('s-ident');
+  document.getElementById('progress-wrap').style.display='none';
+  const n = document.getElementById('inp-nome');
+  if(n) document.getElementById('btn-para-muni').disabled = n.value.trim().length<3;
+}
 function showMuni(){
+  alunoNome = (document.getElementById('inp-nome')||{value:''}).value.trim()||'Aluno';
+  alunoTurma = (document.getElementById('inp-turma')||{value:''}).value.trim();
   renderMunis();
   setScreen('s-muni');
   document.getElementById('progress-wrap').style.display='none';
@@ -1183,6 +1217,7 @@ function mostrarResultado(){
 
   <div class="nav-bar">
     <button class="btn" onclick="reiniciar()">← Refazer exercício</button>
+    <button class="btn btn-accent" onclick="downloadJSON()">⬇ Baixar resultado (JSON)</button>
     <button class="btn btn-primary" onclick="window.print()">Imprimir resultado</button>
   </div>
   </div>`;
@@ -1191,6 +1226,35 @@ function mostrarResultado(){
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
+
+function gerarPayload(){
+  const m = MUNICIPIOS[muniIdx];
+  const pts = calcularPontuacao();
+  const cl = getClass(pts.total);
+  return {
+    versao: "1.0",
+    geradoEm: new Date().toISOString(),
+    aluno: { nome: alunoNome, turma: alunoTurma },
+    municipio: { nome: m.nome, estado: m.estado, problema: m.problema, orcAnual: m.orcAnual, pop: m.pop },
+    pontuacao: { total: pts.total, conceito: cl.letra, label: cl.label, eficMedia: pts.eficMedia, pctOrcamento: pts.pctGasto, totalComprometido: parseFloat(pts.somaCusto) },
+    indicadoresPorArea: pts.porArea,
+    decisoes: DECISOES.map((d,i)=>{
+      const op = d.opcoes[respostas[i]];
+      return { numero: i+1, area: d.area, titulo: d.titulo, prazo: d.prazo, opcaoEscolhida: op.letra, tituloEscolha: op.titulo, custo: op.custo, eficiencia: op.efic, fundamentoTecnico: op.just };
+    })
+  };
+}
+
+function downloadJSON(){
+  const payload = gerarPayload();
+  const nomeArq = (alunoNome||'aluno').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'');
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'resultado-' + nomeArq + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 function reiniciar(){
   muniIdx=null; decAtual=0; respostas=new Array(DECISOES.length).fill(null);
   document.getElementById('briefing-box').style.display='none';
