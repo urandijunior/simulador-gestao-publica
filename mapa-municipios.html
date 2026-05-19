@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa dos Municípios — Simulador de Gestão Pública</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F0EDE5;
+  --paper: #FAF8F3;
+  --ink: #1C1A16;
+  --ink2: #5A5650;
+  --ink3: #9C9890;
+  --border: #D8D4C8;
+  --border-s: #B0AA9C;
+  --water: #C8DDE8;
+  --water-d: #A8C4D4;
+  --land: #E8E2D4;
+  --land-d: #D4CCBA;
+  --forest: #C8D8B8;
+  --road: #F0EAD8;
+  --road-s: #D4C8A8;
+  --accent: #2A4A18;
+  --accent-m: #3D6E24;
+  --accent-l: #EBF2E0;
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── HEADER ── */
+.hdr {
+  background: var(--ink);
+  color: var(--paper);
+  padding: .75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.hdr-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; flex: 1; }
+.hdr-sub { font-size: 11px; opacity: .4; }
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  min-height: calc(100vh - 44px);
+}
+
+/* ── MAP AREA ── */
+.map-area {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.map-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  font-weight: 600;
+}
+
+.map-container {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  flex: 1;
+  min-height: 520px;
+  position: relative;
+}
+
+/* SVG map */
+#brasil-map { width: 100%; height: 100%; display: block; }
+
+.region { fill: var(--land); stroke: var(--border-s); stroke-width: 0.8; transition: fill .2s; }
+.region:hover { fill: var(--land-d); }
+.region.active { fill: #D4E8C4; }
+
+.muni-dot {
+  cursor: pointer;
+  transition: all .2s;
+}
+.muni-dot circle.outer { fill: white; stroke: var(--accent); stroke-width: 2; transition: all .2s; }
+.muni-dot circle.inner { fill: var(--accent); transition: all .2s; }
+.muni-dot:hover circle.outer, .muni-dot.active circle.outer { fill: var(--accent); stroke: var(--accent); }
+.muni-dot:hover circle.inner, .muni-dot.active circle.inner { fill: white; }
+.muni-dot text { font-family: 'Syne', sans-serif; font-size: 9px; fill: var(--ink); font-weight: 600; pointer-events: none; }
+.muni-dot:hover text { fill: var(--ink); }
+
+/* Legend */
+.map-legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink2); }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid white; outline: 1px solid var(--accent); flex-shrink: 0; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--paper);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--ink3);
+}
+.sidebar-empty h3 { font-family: 'Syne', sans-serif; font-size: 1rem; margin-bottom: .5rem; color: var(--ink2); }
+.sidebar-empty p { font-size: 12px; line-height: 1.6; }
+
+.sidebar-content { display: none; flex-direction: column; height: 100%; }
+.sidebar-content.active { display: flex; }
+
+/* City card header */
+.city-hdr {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--ink);
+  color: var(--paper);
+  position: relative;
+  overflow: hidden;
+}
+.city-hdr::after {
+  content: '';
+  position: absolute;
+  right: -20px; top: -20px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.04);
+}
+.city-tag { font-family: 'Syne', sans-serif; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; opacity: .5; margin-bottom: .375rem; }
+.city-name { font-family: 'Syne', sans-serif; font-size: 1.35rem; font-weight: 800; margin-bottom: .25rem; }
+.city-estado { font-size: 12px; opacity: .6; margin-bottom: .75rem; }
+.city-prob-badge {
+  display: inline-block;
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.15);
+  color: rgba(255,255,255,.9);
+}
+
+/* City stats */
+.city-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.stat-cell {
+  background: var(--paper);
+  padding: .75rem 1rem;
+}
+.stat-val { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--ink); }
+.stat-lbl { font-size: 10px; color: var(--ink3); margin-top: 1px; letter-spacing: .03em; }
+
+/* City plant */
+.plant-wrap {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.plant-label { font-family: 'Syne', sans-serif; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); margin-bottom: .625rem; display: block; }
+.plant-svg { width: 100%; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; display: block; background: var(--water); }
+
+/* City briefing */
+.briefing-wrap { padding: 1rem; flex: 1; }
+.brief-section { margin-bottom: .875rem; }
+.brief-lbl { font-family: 'Syne', sans-serif; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); margin-bottom: .375rem; display: block; }
+.brief-text { font-size: 12px; color: var(--ink2); line-height: 1.65; }
+.problem-strip {
+  background: #FEF0F0;
+  border-left: 3px solid #C03030;
+  border-radius: 0 6px 6px 0;
+  padding: .625rem .875rem;
+  font-size: 12px;
+  color: #7A1A1A;
+  line-height: 1.6;
+}
+
+/* nav between cities */
+.city-nav {
+  padding: .75rem 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.city-nav-btn {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border-s);
+  background: var(--paper);
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all .15s;
+}
+.city-nav-btn:hover, .city-nav-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { border-left: none; border-top: 1px solid var(--border); min-height: 500px; }
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-logo">Mapa dos Municípios Fictícios</div>
+  <div class="hdr-sub">Clique em um município para ver a planta urbana e o briefing</div>
+</header>
+
+<div class="layout">
+
+  <!-- MAP -->
+  <div class="map-area">
+    <div class="map-title">Brasil — regiões e municípios do exercício</div>
+
+    <div class="map-container">
+      <svg id="brasil-map" viewBox="0 0 600 680" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- WATER BACKGROUND -->
+        <rect width="600" height="680" fill="#C8DDE8"/>
+
+        <!-- ── REGIÕES DO BRASIL (formas simplificadas) ── -->
+
+        <!-- Norte -->
+        <path class="region" d="M 60 60 L 340 55 L 360 80 L 370 130 L 340 170 L 300 185 L 260 200 L 200 210 L 150 220 L 100 200 L 70 170 L 55 130 Z"/>
+
+        <!-- Nordeste -->
+        <path class="region" d="M 340 55 L 440 60 L 480 90 L 490 140 L 460 180 L 420 200 L 380 210 L 340 190 L 300 185 L 340 170 L 370 130 L 360 80 Z"/>
+
+        <!-- Centro-Oeste -->
+        <path class="region" d="M 150 220 L 200 210 L 260 200 L 300 185 L 340 190 L 340 250 L 320 300 L 280 320 L 240 330 L 200 320 L 160 300 L 140 270 Z"/>
+
+        <!-- Sudeste -->
+        <path class="region" d="M 280 320 L 320 300 L 340 250 L 380 260 L 400 290 L 410 330 L 390 370 L 350 390 L 310 390 L 280 370 L 270 340 Z"/>
+
+        <!-- Sul -->
+        <path class="region" d="M 270 340 L 280 370 L 310 390 L 350 390 L 360 430 L 340 470 L 300 490 L 260 480 L 230 450 L 220 410 L 240 370 Z"/>
+
+        <!-- Nordeste baixo (BA/SE/AL) -->
+        <path class="region" d="M 380 210 L 420 200 L 460 180 L 490 230 L 470 290 L 440 320 L 400 330 L 380 310 L 370 270 L 380 240 Z"/>
+
+        <!-- Labels de região -->
+        <text x="185" y="145" font-family="Syne,sans-serif" font-size="11" fill="#9C9890" font-weight="600" text-anchor="middle" letter-spacing="2">NORTE</text>
+        <text x="410" y="130" font-family="Syne,sans-serif" font-size="10" fill="#9C9890" font-weight="600" text-anchor="middle" letter-spacing="1">NORDESTE</text>
+        <text x="235" y="275" font-family="Syne,sans-serif" font-size="10" fill="#9C9890" font-weight="600" text-anchor="middle" letter-spacing="1">CENTRO-OESTE</text>
+        <text x="345" y="340" font-family="Syne,sans-serif" font-size="9" fill="#9C9890" font-weight="600" text-anchor="middle" letter-spacing="1">SUDESTE</text>
+        <text x="285" y="440" font-family="Syne,sans-serif" font-size="9" fill="#9C9890" font-weight="600" text-anchor="middle" letter-spacing="1">SUL</text>
+
+        <!-- Rios decorativos -->
+        <path d="M 80 100 Q 150 120 200 150 Q 250 175 300 185" fill="none" stroke="#A8C4D4" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M 300 185 Q 310 230 305 270 Q 300 310 280 340" fill="none" stroke="#A8C4D4" stroke-width="1.5" stroke-linecap="round"/>
+
+        <!-- Oceano texto -->
+        <text x="540" y="200" font-family="Syne,sans-serif" font-size="10" fill="#A8C4D4" font-weight="600" text-anchor="middle" letter-spacing="1" transform="rotate(90,540,200)">ATLÂNTICO</text>
+
+        <!-- ══ MUNICÍPIOS ══ -->
+        <!-- 1. Serraventosa / MG (Sudeste) -->
+        <g class="muni-dot" id="dot-0" onclick="selectCity(0)">
+          <circle class="outer" cx="330" cy="345" r="10"/>
+          <circle class="inner" cx="330" cy="345" r="5"/>
+          <text x="330" y="330" text-anchor="middle">Serraventosa</text>
+          <text x="330" y="320" text-anchor="middle" font-size="8" fill="#9C9890">MG</text>
+        </g>
+
+        <!-- 2. Várzea do Ipê / BA (Nordeste baixo) -->
+        <g class="muni-dot" id="dot-1" onclick="selectCity(1)">
+          <circle class="outer" cx="430" cy="270" r="10"/>
+          <circle class="inner" cx="430" cy="270" r="5"/>
+          <text x="430" y="255" text-anchor="middle">Várzea do Ipê</text>
+          <text x="430" y="245" text-anchor="middle" font-size="8" fill="#9C9890">BA</text>
+        </g>
+
+        <!-- 3. Mirante das Pedras / GO (Centro-Oeste) -->
+        <g class="muni-dot" id="dot-2" onclick="selectCity(2)">
+          <circle class="outer" cx="250" cy="275" r="10"/>
+          <circle class="inner" cx="250" cy="275" r="5"/>
+          <text x="250" y="260" text-anchor="middle">Mirante das Pedras</text>
+          <text x="250" y="250" text-anchor="middle" font-size="8" fill="#9C9890">GO</text>
+        </g>
+
+        <!-- 4. Córrego Fundo do Vale / MA (Nordeste) -->
+        <g class="muni-dot" id="dot-3" onclick="selectCity(3)">
+          <circle class="outer" cx="380" cy="165" r="10"/>
+          <circle class="inner" cx="380" cy="165" r="5"/>
+          <text x="380" y="150" text-anchor="middle">Córrego Fundo</text>
+          <text x="380" y="140" text-anchor="middle" font-size="8" fill="#9C9890">MA</text>
+        </g>
+
+        <!-- 5. Pedra Branca do Sul / RS (Sul) -->
+        <g class="muni-dot" id="dot-4" onclick="selectCity(4)">
+          <circle class="outer" cx="285" cy="460" r="10"/>
+          <circle class="inner" cx="285" cy="460" r="5"/>
+          <text x="285" y="478" text-anchor="middle">Pedra Branca do Sul</text>
+          <text x="285" y="488" text-anchor="middle" font-size="8" fill="#9C9890">RS</text>
+        </g>
+
+        <!-- 6. Atalaia do Norte Velho / PA (Norte) -->
+        <g class="muni-dot" id="dot-5" onclick="selectCity(5)">
+          <circle class="outer" cx="165" cy="145" r="10"/>
+          <circle class="inner" cx="165" cy="145" r="5"/>
+          <text x="165" y="130" text-anchor="middle">Atalaia do Norte</text>
+          <text x="165" y="120" text-anchor="middle" font-size="8" fill="#9C9890">PA</text>
+        </g>
+
+        <!-- 7. Nova Esperança da Beira / MS (Centro-Oeste) -->
+        <g class="muni-dot" id="dot-6" onclick="selectCity(6)">
+          <circle class="outer" cx="210" cy="315" r="10"/>
+          <circle class="inner" cx="210" cy="315" r="5"/>
+          <text x="210" y="300" text-anchor="middle">Nova Esperança</text>
+          <text x="210" y="290" text-anchor="middle" font-size="8" fill="#9C9890">MS</text>
+        </g>
+
+        <!-- 8. Capim Grosso da Serra / TO (Norte/Centro) -->
+        <g class="muni-dot" id="dot-7" onclick="selectCity(7)">
+          <circle class="outer" cx="300" cy="230" r="10"/>
+          <circle class="inner" cx="300" cy="230" r="5"/>
+          <text x="300" y="215" text-anchor="middle">Capim Grosso</text>
+          <text x="300" y="205" text-anchor="middle" font-size="8" fill="#9C9890">TO</text>
+        </g>
+
+        <!-- 9. Bom Jesus das Flores / PE (Nordeste) -->
+        <g class="muni-dot" id="dot-8" onclick="selectCity(8)">
+          <circle class="outer" cx="450" cy="175" r="10"/>
+          <circle class="inner" cx="450" cy="175" r="5"/>
+          <text x="470" y="172" text-anchor="start">Bom Jesus das Flores</text>
+          <text x="470" y="183" text-anchor="start" font-size="8" fill="#9C9890">PE</text>
+        </g>
+
+        <!-- 10. São Benedito do Planalto / MG (Sudeste) -->
+        <g class="muni-dot" id="dot-9" onclick="selectCity(9)">
+          <circle class="outer" cx="360" cy="370" r="10"/>
+          <circle class="inner" cx="360" cy="370" r="5"/>
+          <text x="360" y="388" text-anchor="middle">São Benedito</text>
+          <text x="360" y="398" text-anchor="middle" font-size="8" fill="#9C9890">MG</text>
+        </g>
+
+        <!-- Escala -->
+        <line x1="40" y1="640" x2="120" y2="640" stroke="#B0AA9C" stroke-width="1"/>
+        <line x1="40" y1="635" x2="40" y2="645" stroke="#B0AA9C" stroke-width="1"/>
+        <line x1="120" y1="635" x2="120" y2="645" stroke="#B0AA9C" stroke-width="1"/>
+        <text x="80" y="658" font-family="Syne,sans-serif" font-size="9" fill="#9C9890" text-anchor="middle">~1.000 km</text>
+
+        <!-- Compass -->
+        <text x="555" y="90" font-family="Syne,sans-serif" font-size="11" fill="#5A5650" font-weight="700" text-anchor="middle">N</text>
+        <line x1="555" y1="95" x2="555" y2="115" stroke="#B0AA9C" stroke-width="1"/>
+        <polygon points="555,93 551,107 555,104 559,107" fill="#5A5650"/>
+
+      </svg>
+    </div>
+
+    <div class="map-legend">
+      <div class="leg-item"><div class="leg-dot"></div> Município do exercício</div>
+      <div class="leg-item" style="gap:5px">
+        <div style="width:20px;height:10px;background:#C8D8B8;border:1px solid #B0AA9C;border-radius:2px"></div> Região Norte/floresta
+      </div>
+      <div class="leg-item" style="gap:5px">
+        <div style="width:20px;height:10px;background:#C8DDE8;border:1px solid #A8C4D4;border-radius:2px"></div> Oceano / rios
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+
+    <div class="sidebar-empty" id="empty-panel">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin-bottom:1rem;opacity:.3">
+        <circle cx="24" cy="24" r="20" stroke="#1C1A16" stroke-width="1.5"/>
+        <circle cx="24" cy="24" r="6" fill="#1C1A16"/>
+        <line x1="24" y1="4" x2="24" y2="14" stroke="#1C1A16" stroke-width="1.5"/>
+        <line x1="24" y1="34" x2="24" y2="44" stroke="#1C1A16" stroke-width="1.5"/>
+        <line x1="4" y1="24" x2="14" y2="24" stroke="#1C1A16" stroke-width="1.5"/>
+        <line x1="34" y1="24" x2="44" y2="24" stroke="#1C1A16" stroke-width="1.5"/>
+      </svg>
+      <h3>Selecione um município</h3>
+      <p>Clique em qualquer ponto no mapa para ver a planta urbana fictícia e o briefing completo da cidade.</p>
+    </div>
+
+    <div class="sidebar-content" id="city-panel">
+      <div class="city-hdr" id="city-hdr"></div>
+      <div class="city-stats" id="city-stats"></div>
+      <div class="plant-wrap">
+        <span class="plant-label">Planta urbana fictícia</span>
+        <svg class="plant-svg" id="plant-svg" viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="briefing-wrap" id="city-briefing"></div>
+      <div class="city-nav" id="city-nav"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const CIDADES = [
+  {
+    nome: "Serraventosa", estado: "Minas Gerais", sigla: "MG",
+    problema: "Saúde", pop: "28.400", orc: "R$ 62,4 mi/ano", idhm: "0,612",
+    hist: "Fundada em 1887 por tropeiros mineiros, cresceu ao redor de uma feira agropecuária semanal ainda ativa. Emancipada de Montes Claros em 1962.",
+    econ: "Agropecuária extensiva (68% do PIB), pequeno comércio e transferências federais. Desemprego formal de 14,2%.",
+    social: "Mortalidade infantil de 22/mil NV. 1 UPA, 4 UBS. Cobertura PSF: 58%. Esgotamento sanitário: 41%.",
+    prob: "Colapso progressivo da saúde: déficit de especialistas, equipamentos obsoletos, alto índice de mortalidade infantil e ausência de UTI própria.",
+    plant: "serraventosa"
+  },
+  {
+    nome: "Várzea do Ipê", estado: "Bahia", sigla: "BA",
+    problema: "Educação", pop: "31.200", orc: "R$ 58,1 mi/ano", idhm: "0,589",
+    hist: "Originada de quilombo do século XVIII às margens do Rio Ipê. Identidade afro-brasileira marcante. Tornou-se município em 1948.",
+    econ: "Agricultura familiar, artesanato de couro. FPM representa 73% da receita. PIB per capita entre os mais baixos do exercício.",
+    social: "Analfabetismo de adultos: 21,4%. Evasão no ensino médio: 38%. IDEB: 3,2. Professores sem formação superior: 34%.",
+    prob: "Sistema educacional em colapso: infraestrutura deteriorada, altíssima evasão, déficit de professores e desempenho nas avaliações no 4º quartil estadual.",
+    plant: "varzea"
+  },
+  {
+    nome: "Mirante das Pedras", estado: "Goiás", sigla: "GO",
+    problema: "Turismo", pop: "26.800", orc: "R$ 55,7 mi/ano", idhm: "0,668",
+    hist: "Surgida no ciclo do diamante do século XIX. Centro histórico tombado pelo IPHAN com arquitetura colonial eclesiástica.",
+    econ: "Agropecuária de subsistência (32%), serviços (44%) e artesanato em pedras semi-preciosas. Apenas 3 pousadas formais.",
+    social: "Jovens migram para Goiânia e Brasília. Renda média R$ 1.340/mês. Taxa de formalidade: 38%.",
+    prob: "Potencial turístico imenso — cavernas, cachoeiras, gastronomia, festas — sistematicamente desperdiçado. Captação estimada de apenas 8% do fluxo potencial.",
+    plant: "mirante"
+  },
+  {
+    nome: "Córrego Fundo do Vale", estado: "Maranhão", sigla: "MA",
+    problema: "Finanças Públicas", pop: "29.700", orc: "R$ 54,2 mi/ano", idhm: "0,556",
+    hist: "Emancipado em 1985 por fragmentação político-administrativa. Nasceu sem base econômica sólida, atendendo interesses políticos.",
+    econ: "Pesca artesanal e agricultura de subsistência: 71% do PIB. Arrecadação própria: R$ 2,1 mi/ano (apenas 3,9% da receita).",
+    social: "76% dos domicílios dependem de transferência de renda. Folha de pagamento: 59% da RCL. Dívida com fornecedores: R$ 8,7 mi.",
+    prob: "Crise fiscal estrutural: arrecadação própria irrisória, despesa com pessoal próxima ao limite legal, dívidas acumuladas e investimentos zerados.",
+    plant: "corrego"
+  },
+  {
+    nome: "Pedra Branca do Sul", estado: "Rio Grande do Sul", sigla: "RS",
+    problema: "Infraestrutura Viária", pop: "27.300", orc: "R$ 68,4 mi/ano", idhm: "0,701",
+    hist: "Fundada em 1910 por imigrantes italianos e alemães. Polo agroindustrial regional que cresceu de forma desordenada nas últimas três décadas.",
+    econ: "Agroindústria (41%), metal-mecânica leve (19%) e serviços (33%). 8.900 empregos formais. PIB per capita acima da média regional.",
+    social: "Escolaridade acima da média estadual. Duas empresas deixaram o distrito industrial por problemas logísticos viários.",
+    prob: "67% das ruas urbanas sem pavimentação ou em estado crítico. Custo de recuperação integral: R$ 41 mi — equivalente a 60% da receita anual.",
+    plant: "pedrabranca"
+  },
+  {
+    nome: "Atalaia do Norte Velho", estado: "Pará", sigla: "PA",
+    problema: "Logística e Escoamento", pop: "30.100", orc: "R$ 57,3 mi/ano", idhm: "0,581",
+    hist: "Cidade ribeirinha fundada como entreposto de borracha no início do século XX. Rodovia de acesso ao estado concluída somente em 1991.",
+    econ: "Agricultura (açaí, cacau, pesca: 55%), comércio regional (28%). Perdas pós-colheita: 31%. Porto fluvial subutilizado.",
+    social: "40% dos produtores não conseguem vender toda a produção. Rodovia intransitável 60-90 dias/ano no período chuvoso.",
+    prob: "Estrangulamento logístico severo: produção agrícola expressiva que não chega ao mercado por falta de vias, câmaras frias e organização da cadeia.",
+    plant: "atalaia"
+  },
+  {
+    nome: "Nova Esperança da Beira", estado: "Mato Grosso do Sul", sigla: "MS",
+    problema: "Saneamento e Meio Ambiente", pop: "25.900", orc: "R$ 53,8 mi/ano", idhm: "0,643",
+    hist: "Criado em 1993 por colonização planejada de cooperativas agrícolas sulistas. Crescimento rápido e desordenado na primeira década.",
+    econ: "Soja e pecuária: 78% do PIB. Passivo ambiental ameaça certificação e exportação das cooperativas locais.",
+    social: "36% dos domicílios sem esgotamento adequado. Contaminação fecal do rio principal. Doenças de veiculação hídrica: 3,4x a taxa estadual.",
+    prob: "Colapso do saneamento e passivo ambiental crescente: esgoto sem tratamento, lixão irregular, contaminação hídrica ameaçando saúde e agronegócio.",
+    plant: "novaesperanca"
+  },
+  {
+    nome: "Capim Grosso da Serra", estado: "Tocantins", sigla: "TO",
+    problema: "Habitação e Urbanismo", pop: "28.800", orc: "R$ 56,9 mi/ano", idhm: "0,621",
+    hist: "Antiga vila de garimpeiros, transformada em município em 1988. Cresceu irregularmente com ocupações em encostas e margens de córregos.",
+    econ: "Comércio e serviços (52%), agropecuária (31%). Irregularidade fundiária impede acesso a crédito. 38% dos imóveis sem IPTU.",
+    social: "Déficit habitacional: 3.200 unidades. 4.100 pessoas em áreas de risco. Apenas 31% dos imóveis com registro regular.",
+    prob: "Déficit habitacional grave, ocupação irregular de áreas de risco e ausência de regularização fundiária. Plano diretor não atualizado desde 2004.",
+    plant: "capimgrosso"
+  },
+  {
+    nome: "Bom Jesus das Flores", estado: "Pernambuco", sigla: "PE",
+    problema: "Segurança e Coesão Social", pop: "32.600", orc: "R$ 61,7 mi/ano", idhm: "0,596",
+    hist: "Cidade do agreste pernambucano com forte identidade cultural. A partir dos anos 2000, esvaziamento do campo trouxe tensões sociais crescentes.",
+    econ: "Serviços (49%), comércio (31%), artesanato em barro (12%). Economia informal expressiva: 44% dos trabalhadores fora do mercado formal.",
+    social: "Taxa de homicídios: 38/100 mil. Dois bairros concentram 71% dos registros de violência. Jovens de 15-29 anos: 68% das vítimas.",
+    prob: "Escalada de violência urbana concentrada em jovens e bairros periféricos, associada a desemprego, baixa escolaridade e ausência de equipamentos sociais.",
+    plant: "bomjesus"
+  },
+  {
+    nome: "São Benedito do Planalto", estado: "Minas Gerais", sigla: "MG",
+    problema: "Gestão e Modernização", pop: "27.600", orc: "R$ 59,3 mi/ano", idhm: "0,648",
+    hist: "Município centenário (fundado em 1902) com administração pública conservadora. Recentemente eleito prefeito com mandato reformista.",
+    econ: "Serviços (55%), agropecuária (28%), indústria leve (17%). Tempo para abertura de empresa: 43 dias (média nacional: 2 dias).",
+    social: "Satisfação com serviços públicos: 31%. Atendimento presencial: 2h40 de espera. 9 de 14 secretarias operam 100% em papel.",
+    prob: "Administração pública obsoleta: processos manuais, ausência de governo digital, licitações lentas. Perda estimada por ineficiências: R$ 4,2 mi/ano.",
+    plant: "saobenedito"
+  }
+];
+
+// ══ PLANTAS URBANAS FICTÍCIAS ══════════════════════════════════════════════
+// Cada planta é um conjunto de formas SVG que compõe um layout urbano distinto
+
+function drawPlant(id, svgEl) {
+  const plants = {
+
+    serraventosa: () => `
+      <rect width="300" height="220" fill="#D4CCBA"/>
+      <rect x="0" y="90" width="300" height="40" fill="#E8D8B8" opacity=".6"/>
+      <rect x="130" y="0" width="40" height="220" fill="#E8D8B8" opacity=".6"/>
+      <rect x="60" y="40" width="70" height="60" rx="3" fill="#C8B898" stroke="#A89878" stroke-width=".8"/>
+      <rect x="170" y="40" width="80" height="55" rx="3" fill="#C8B898" stroke="#A89878" stroke-width=".8"/>
+      <rect x="60" y="140" width="55" height="50" rx="3" fill="#C8B898" stroke="#A89878" stroke-width=".8"/>
+      <rect x="185" y="140" width="70" height="55" rx="3" fill="#C8B898" stroke="#A89878" stroke-width=".8"/>
+      <rect x="10" y="50" width="35" height="130" rx="2" fill="#B8CCAC" stroke="#98AC8C" stroke-width=".8"/>
+      <rect x="255" y="50" width="35" height="120" rx="2" fill="#DCCCB0" stroke="#BCA890" stroke-width=".8"/>
+      <circle cx="150" cy="110" r="18" fill="#B8CCAC" stroke="#98AC8C" stroke-width="1"/>
+      <rect x="143" y="103" width="14" height="14" rx="2" fill="#D8C8A8"/>
+      <text x="150" y="200" font-family="Syne,sans-serif" font-size="7" fill="#7A6A50" text-anchor="middle" letter-spacing="1">SERRAVENTOSA — MG</text>
+      <text x="24" y="118" font-family="Syne,sans-serif" font-size="6" fill="#7A6A50" text-anchor="middle">Zona Rural</text>
+      <text x="150" y="100" font-family="Syne,sans-serif" font-size="6" fill="#5A5040" text-anchor="middle">Centro</text>
+      <text x="217" y="100" font-family="Syne,sans-serif" font-size="6" fill="#7A6A50" text-anchor="middle">Hosp.</text>
+    `,
+
+    varzea: () => `
+      <rect width="300" height="220" fill="#C8D8A8"/>
+      <path d="M 0 80 Q 80 60 150 90 Q 220 120 300 100" fill="none" stroke="#A8BCDC" stroke-width="8" opacity=".7"/>
+      <rect x="0" y="100" width="300" height="30" fill="#E0D0A8" opacity=".5"/>
+      <rect x="100" y="0" width="30" height="220" fill="#E0D0A8" opacity=".5"/>
+      <rect x="30" y="40" width="55" height="45" rx="3" fill="#C0AC84" stroke="#A08C64" stroke-width=".8"/>
+      <rect x="30" y="140" width="55" height="55" rx="3" fill="#C0AC84" stroke="#A08C64" stroke-width=".8"/>
+      <rect x="145" y="30" width="65" height="55" rx="3" fill="#B8CC9C" stroke="#98AC7C" stroke-width=".8"/>
+      <rect x="145" y="140" width="40" height="45" rx="3" fill="#C0AC84" stroke="#A08C64" stroke-width=".8"/>
+      <rect x="210" y="140" width="60" height="45" rx="3" fill="#C0AC84" stroke="#A08C64" stroke-width=".8"/>
+      <rect x="220" y="30" width="60" height="80" rx="3" fill="#C8B4A0" stroke="#A89480" stroke-width=".8"/>
+      <rect x="10" y="40" width="15" height="150" rx="2" fill="#B0C89C" stroke="#90A87C" stroke-width=".8"/>
+      <text x="150" y="210" font-family="Syne,sans-serif" font-size="7" fill="#6A5A38" text-anchor="middle" letter-spacing="1">VÁRZEA DO IPÊ — BA</text>
+      <text x="57" y="67" font-family="Syne,sans-serif" font-size="6" fill="#5A5030" text-anchor="middle">Centro</text>
+      <text x="178" y="57" font-family="Syne,sans-serif" font-size="6" fill="#5A5030" text-anchor="middle">Escola</text>
+      <text x="105" y="75" font-family="Syne,sans-serif" font-size="5" fill="#8080B0" text-anchor="middle">Rio Ipê</text>
+    `,
+
+    mirante: () => `
+      <rect width="300" height="220" fill="#D8CCB4"/>
+      <ellipse cx="150" cy="110" rx="45" ry="35" fill="#C4D4AC" stroke="#A4B48C" stroke-width="1"/>
+      <rect x="0" y="105" width="300" height="12" fill="#E8D8B0" opacity=".7"/>
+      <rect x="144" y="0" width="12" height="220" fill="#E8D8B0" opacity=".7"/>
+      <rect x="80" y="50" width="50" height="45" rx="4" fill="#D4B890" stroke="#B49870" stroke-width=".8"/>
+      <rect x="175" y="50" width="55" height="40" rx="3" fill="#C8B884" stroke="#A89864" stroke-width=".8"/>
+      <rect x="80" y="135" width="45" height="50" rx="3" fill="#C8B884" stroke="#A89864" stroke-width=".8"/>
+      <rect x="175" y="140" width="60" height="45" rx="3" fill="#C8B884" stroke="#A89864" stroke-width=".8"/>
+      <rect x="15" y="40" width="40" height="60" rx="3" fill="#B8CCAC" stroke="#98AC8C" stroke-width=".8"/>
+      <rect x="15" y="130" width="40" height="60" rx="3" fill="#C8B884" stroke="#A89864" stroke-width=".8"/>
+      <rect x="248" y="60" width="40" height="100" rx="3" fill="#D4B890" stroke="#B49870" stroke-width=".8"/>
+      <circle cx="150" cy="110" r="12" fill="#D4B890" stroke="#B49870" stroke-width="1.5"/>
+      <text x="150" y="114" font-family="Syne,sans-serif" font-size="6" fill="#6A5030" text-anchor="middle">Praça</text>
+      <text x="150" y="208" font-family="Syne,sans-serif" font-size="7" fill="#6A5030" text-anchor="middle" letter-spacing="1">MIRANTE DAS PEDRAS — GO</text>
+      <text x="35" y="72" font-family="Syne,sans-serif" font-size="6" fill="#5A4020" text-anchor="middle">Museu</text>
+    `,
+
+    corrego: () => `
+      <rect width="300" height="220" fill="#C8D0B8"/>
+      <path d="M 0 160 Q 60 150 120 155 Q 180 160 240 150 Q 270 145 300 150" fill="#A8BCDC" stroke="#88A0C0" stroke-width="6" opacity=".8"/>
+      <rect x="0" y="95" width="300" height="12" fill="#E0D0A0" opacity=".6"/>
+      <rect x="100" y="0" width="12" height="140" fill="#E0D0A0" opacity=".6"/>
+      <rect x="220" y="0" width="12" height="140" fill="#E0D0A0" opacity=".4"/>
+      <rect x="20" y="25" width="65" height="55" rx="2" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="115" y="25" width="90" height="50" rx="2" fill="#B8CCAC" stroke="#98AC8C" stroke-width=".8"/>
+      <rect x="235" y="25" width="55" height="60" rx="2" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="20" y="110" width="65" height="35" rx="2" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="115" y="110" width="90" height="35" rx="2" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="235" y="110" width="55" height="35" rx="2" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <text x="150" y="175" font-family="Syne,sans-serif" font-size="6" fill="#8898C8" text-anchor="middle">Rio do Vale</text>
+      <text x="150" y="210" font-family="Syne,sans-serif" font-size="7" fill="#5A5030" text-anchor="middle" letter-spacing="1">CÓRREGO FUNDO — MA</text>
+      <text x="160" y="52" font-family="Syne,sans-serif" font-size="6" fill="#4A5A2A" text-anchor="middle">Prefeitura</text>
+    `,
+
+    pedrabranca: () => `
+      <rect width="300" height="220" fill="#D0C8B4"/>
+      <rect x="0" y="60" width="300" height="14" fill="#EAD8A8" stroke="#C8B880" stroke-width=".5"/>
+      <rect x="0" y="100" width="300" height="14" fill="#EAD8A8" stroke="#C8B880" stroke-width=".5"/>
+      <rect x="0" y="140" width="300" height="14" fill="#EAD8A8" stroke="#C8B880" stroke-width=".5"/>
+      <rect x="60" y="0" width="14" height="220" fill="#EAD8A8" stroke="#C8B880" stroke-width=".5"/>
+      <rect x="130" y="0" width="14" height="220" fill="#EAD8A8" stroke="#C8B880" stroke-width=".5"/>
+      <rect x="200" y="0" width="14" height="220" fill="#EAD8A8" stroke="#C8B880" stroke-width=".5"/>
+      <rect x="10" y="10" width="40" height="40" rx="2" fill="#C0AC88" stroke="#A08C68" stroke-width=".8"/>
+      <rect x="80" y="10" width="40" height="40" rx="2" fill="#C0AC88" stroke="#A08C68" stroke-width=".8"/>
+      <rect x="150" y="10" width="40" height="40" rx="2" fill="#C0AC88" stroke="#A08C68" stroke-width=".8"/>
+      <rect x="220" y="10" width="70" height="40" rx="2" fill="#B8C4A0" stroke="#98A480" stroke-width=".8"/>
+      <rect x="10" y="78" width="40" height="14" rx="2" fill="#C0AC88" stroke="#A08C68" stroke-width=".5"/>
+      <rect x="80" y="78" width="40" height="14" rx="2" fill="#C0AC88" stroke="#A08C68" stroke-width=".5"/>
+      <rect x="10" y="118" width="40" height="14" rx="2" fill="#C0AC88" stroke="#A08C68" stroke-width=".5"/>
+      <rect x="80" y="118" width="40" height="14" rx="2" fill="#C0AC88" stroke="#A08C68" stroke-width=".5"/>
+      <rect x="150" y="118" width="40" height="14" rx="2" fill="#C0AC88" stroke="#A08C68" stroke-width=".5"/>
+      <rect x="10" y="158" width="100" height="50" rx="2" fill="#C8C4B0" stroke="#A8A490" stroke-width=".8"/>
+      <rect x="150" y="158" width="130" height="50" rx="2" fill="#B4C4A8" stroke="#94A488" stroke-width=".8"/>
+      <text x="220" y="33" font-family="Syne,sans-serif" font-size="6" fill="#4A5A2A" text-anchor="middle">Dist. Industrial</text>
+      <text x="60" y="185" font-family="Syne,sans-serif" font-size="6" fill="#5A5030" text-anchor="middle">Residencial</text>
+      <text x="215" y="185" font-family="Syne,sans-serif" font-size="6" fill="#4A5A2A" text-anchor="middle">Zona de Expansão</text>
+      <text x="150" y="210" font-family="Syne,sans-serif" font-size="7" fill="#5A4A28" text-anchor="middle" letter-spacing="1">PEDRA BRANCA DO SUL — RS</text>
+    `,
+
+    atalaia: () => `
+      <rect width="300" height="220" fill="#B8CCB4"/>
+      <path d="M 0 40 Q 50 35 100 45 Q 150 55 200 45 Q 250 35 300 45 L 300 80 Q 250 70 200 80 Q 150 90 100 80 Q 50 70 0 80 Z" fill="#A8C0DC" opacity=".8"/>
+      <path d="M 0 80 Q 50 90 100 85 Q 150 80 300 85 L 300 110 Q 150 108 0 110 Z" fill="#90AACE" opacity=".6"/>
+      <rect x="0" y="120" width="300" height="16" fill="#E0CCA0" opacity=".7"/>
+      <rect x="100" y="110" width="14" height="100" fill="#E0CCA0" opacity=".5"/>
+      <rect x="10" y="130" width="80" height="50" rx="3" fill="#C0AC88" stroke="#A08C68" stroke-width=".8"/>
+      <rect x="120" y="130" width="70" height="50" rx="3" fill="#C0AC88" stroke="#A08C68" stroke-width=".8"/>
+      <rect x="210" y="130" width="80" height="50" rx="3" fill="#B8C8A4" stroke="#98A884" stroke-width=".8"/>
+      <rect x="40" y="185" width="50" height="25" rx="2" fill="#C4B490" stroke="#A49470" stroke-width=".8"/>
+      <rect x="140" y="185" width="40" height="25" rx="2" fill="#C4B490" stroke="#A49470" stroke-width=".8"/>
+      <text x="50" y="60" font-family="Syne,sans-serif" font-size="6" fill="#4868A0" text-anchor="middle">Porto Fluvial</text>
+      <text x="155" y="157" font-family="Syne,sans-serif" font-size="6" fill="#5A5030" text-anchor="middle">Centro</text>
+      <text x="250" y="157" font-family="Syne,sans-serif" font-size="6" fill="#4A5A2A" text-anchor="middle">Armazéns</text>
+      <text x="150" y="210" font-family="Syne,sans-serif" font-size="7" fill="#4A5030" text-anchor="middle" letter-spacing="1">ATALAIA DO NORTE VELHO — PA</text>
+    `,
+
+    novaesperanca: () => `
+      <rect width="300" height="220" fill="#C0CCA8"/>
+      <rect x="60" y="0" width="180" height="220" fill="#B8C4A0" opacity=".4"/>
+      <path d="M 150 0 Q 140 30 130 50 Q 120 70 130 90 Q 140 110 150 120 Q 160 110 170 90 Q 180 70 170 50 Q 160 30 150 0" fill="#A8C0DC" stroke="#88A0C0" stroke-width=".8"/>
+      <rect x="0" y="100" width="300" height="14" fill="#E0CCA0" opacity=".6"/>
+      <rect x="140" y="0" width="14" height="220" fill="#E0CCA0" opacity=".5"/>
+      <rect x="10" y="20" width="60" height="70" rx="3" fill="#C8D4B4" stroke="#A8B494" stroke-width=".8"/>
+      <rect x="230" y="20" width="60" height="70" rx="3" fill="#C8D4B4" stroke="#A8B494" stroke-width=".8"/>
+      <rect x="10" y="120" width="120" height="55" rx="3" fill="#C0B094" stroke="#A09074" stroke-width=".8"/>
+      <rect x="170" y="120" width="120" height="55" rx="3" fill="#C0B094" stroke="#A09074" stroke-width=".8"/>
+      <rect x="10" y="180" width="55" height="30" rx="2" fill="#C0B094" stroke="#A09074" stroke-width=".5"/>
+      <rect x="80" y="180" width="40" height="30" rx="2" fill="#C0B094" stroke="#A09074" stroke-width=".5"/>
+      <rect x="180" y="180" width="55" height="30" rx="2" fill="#C0B094" stroke="#A09074" stroke-width=".5"/>
+      <text x="40" y="58" font-family="Syne,sans-serif" font-size="6" fill="#4A5A2A" text-anchor="middle">Cooperativa</text>
+      <text x="260" y="58" font-family="Syne,sans-serif" font-size="6" fill="#4A5A2A" text-anchor="middle">Cooperativa</text>
+      <text x="150" y="55" font-family="Syne,sans-serif" font-size="6" fill="#6880A8" text-anchor="middle">Rio</text>
+      <text x="150" y="210" font-family="Syne,sans-serif" font-size="7" fill="#4A5030" text-anchor="middle" letter-spacing="1">NOVA ESPERANÇA — MS</text>
+    `,
+
+    capimgrosso: () => `
+      <rect width="300" height="220" fill="#C8C0A8"/>
+      <path d="M 0 60 Q 30 40 70 50 Q 100 60 80 90 Q 60 110 30 100 Q 10 90 0 80 Z" fill="#B0B8A8" opacity=".6"/>
+      <path d="M 240 40 Q 270 30 295 45 Q 310 60 290 80 Q 270 90 250 80 Q 235 65 240 40 Z" fill="#B0B8A8" opacity=".6"/>
+      <rect x="0" y="110" width="300" height="14" fill="#E0C898" opacity=".6"/>
+      <rect x="120" y="0" width="14" height="220" fill="#E0C898" opacity=".5"/>
+      <rect x="200" y="0" width="14" height="220" fill="#E0C898" opacity=".4"/>
+      <rect x="20" y="120" width="90" height="50" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="130" y="120" width="60" height="50" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="220" y="120" width="70" height="50" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="130" y="30" width="60" height="70" rx="3" fill="#CCB898" stroke="#AC9878" stroke-width=".8"/>
+      <rect x="220" y="30" width="70" height="70" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="20" y="180" width="40" height="30" rx="2" fill="#D0B898" stroke="#B09878" stroke-width=".5"/>
+      <rect x="70" y="180" width="40" height="30" rx="2" fill="#B8C4A0" stroke="#98A480" stroke-width=".5"/>
+      <text x="65" y="147" font-family="Syne,sans-serif" font-size="6" fill="#5A4A28" text-anchor="middle">Assentam.</text>
+      <text x="160" y="62" font-family="Syne,sans-serif" font-size="6" fill="#5A4A28" text-anchor="middle">Centro</text>
+      <text x="150" y="210" font-family="Syne,sans-serif" font-size="7" fill="#5A4A28" text-anchor="middle" letter-spacing="1">CAPIM GROSSO DA SERRA — TO</text>
+    `,
+
+    bomjesus: () => `
+      <rect width="300" height="220" fill="#C8C4A8"/>
+      <ellipse cx="150" cy="108" rx="50" ry="40" fill="#D4C4A0" stroke="#B4A480" stroke-width="1"/>
+      <rect x="0" y="103" width="300" height="12" fill="#E8D4A8" opacity=".6"/>
+      <rect x="145" y="0" width="12" height="220" fill="#E8D4A8" opacity=".5"/>
+      <rect x="0" y="148" width="300" height="12" fill="#E8D4A8" opacity=".4"/>
+      <rect x="15" y="30" width="60" height="65" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="15" y="165" width="60" height="45" rx="3" fill="#D4B89C" stroke="#B49878" stroke-width=".8"/>
+      <rect x="90" y="30" width="40" height="65" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="90" y="165" width="40" height="45" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="175" y="30" width="60" height="65" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="175" y="165" width="60" height="45" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="245" y="30" width="50" height="65" rx="3" fill="#C4B090" stroke="#A49070" stroke-width=".8"/>
+      <rect x="245" y="165" width="50" height="45" rx="3" fill="#D4B89C" stroke="#B49878" stroke-width=".8"/>
+      <rect x="135" y="75" width="30" height="65" rx="3" fill="#CCB898" stroke="#AC9878" stroke-width=".8"/>
+      <text x="150" y="112" font-family="Syne,sans-serif" font-size="6" fill="#5A4028" text-anchor="middle">Praça Central</text>
+      <text x="45" y="57" font-family="Syne,sans-serif" font-size="6" fill="#5A4028" text-anchor="middle">Bairro Alto</text>
+      <text x="275" y="57" font-family="Syne,sans-serif" font-size="6" fill="#8A4028" text-anchor="middle">Bairro Sul</text>
+      <text x="150" y="210" font-family="Syne,sans-serif" font-size="7" fill="#5A4028" text-anchor="middle" letter-spacing="1">BOM JESUS DAS FLORES — PE</text>
+    `,
+
+    saobenedito: () => `
+      <rect width="300" height="220" fill="#D0C8B0"/>
+      <rect x="0" y="70" width="300" height="14" fill="#E8D4A0" stroke="#C8B480" stroke-width=".5"/>
+      <rect x="0" y="120" width="300" height="14" fill="#E8D4A0" stroke="#C8B480" stroke-width=".5"/>
+      <rect x="0" y="170" width="300" height="14" fill="#E8D4A0" stroke="#C8B480" stroke-width=".5"/>
+      <rect x="70" y="0" width="14" height="220" fill="#E8D4A0" stroke="#C8B480" stroke-width=".5"/>
+      <rect x="155" y="0" width="14" height="220" fill="#E8D4A0" stroke="#C8B480" stroke-width=".5"/>
+      <rect x="240" y="0" width="14" height="220" fill="#E8D4A0" stroke="#C8B480" stroke-width=".5"/>
+      <rect x="10" y="10" width="50" height="50" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".8"/>
+      <rect x="90" y="10" width="55" height="50" rx="2" fill="#BCC8A4" stroke="#9CA884" stroke-width=".8"/>
+      <rect x="175" y="10" width="55" height="50" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".8"/>
+      <rect x="255" y="10" width="35" height="50" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".8"/>
+      <rect x="10" y="88" width="50" height="22" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".5"/>
+      <rect x="90" y="88" width="55" height="22" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".5"/>
+      <rect x="175" y="88" width="55" height="22" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".5"/>
+      <rect x="10" y="138" width="50" height="22" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".5"/>
+      <rect x="90" y="138" width="55" height="22" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".5"/>
+      <rect x="175" y="138" width="55" height="22" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".5"/>
+      <rect x="255" y="138" width="35" height="22" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".5"/>
+      <rect x="10" y="188" width="120" height="22" rx="2" fill="#BCC8A4" stroke="#9CA884" stroke-width=".8"/>
+      <rect x="175" y="188" width="115" height="22" rx="2" fill="#C8B488" stroke="#A89468" stroke-width=".8"/>
+      <text x="117" y="38" font-family="Syne,sans-serif" font-size="6" fill="#3A5A1A" text-anchor="middle">Prefeitura</text>
+      <text x="65" y="201" font-family="Syne,sans-serif" font-size="6" fill="#3A5A1A" text-anchor="middle">Parque Tecnológico</text>
+      <text x="150" y="210" font-family="Syne,sans-serif" font-size="7" fill="#5A4828" text-anchor="middle" letter-spacing="1">SÃO BENEDITO DO PLANALTO — MG</text>
+    `
+  };
+
+  return plants[id] ? plants[id]() : '';
+}
+
+// ══ INTERATIVIDADE ══
+let cidadeAtiva = null;
+
+function selectCity(idx) {
+  cidadeAtiva = idx;
+  const c = CIDADES[idx];
+
+  document.querySelectorAll('.muni-dot').forEach((d,i) => {
+    d.classList.toggle('active', i === idx);
+  });
+
+  document.getElementById('empty-panel').style.display = 'none';
+  const panel = document.getElementById('city-panel');
+  panel.classList.add('active');
+
+  // Header
+  document.getElementById('city-hdr').innerHTML = `
+    <div class="city-tag">Município fictício · ${c.sigla}</div>
+    <div class="city-name">${c.nome}</div>
+    <div class="city-estado">${c.estado}</div>
+    <span class="city-prob-badge">Problema central: ${c.problema}</span>
+  `;
+
+  // Stats
+  document.getElementById('city-stats').innerHTML = `
+    <div class="stat-cell"><div class="stat-val">${c.pop}</div><div class="stat-lbl">Habitantes</div></div>
+    <div class="stat-cell"><div class="stat-val">${c.orc}</div><div class="stat-lbl">Orçamento</div></div>
+    <div class="stat-cell"><div class="stat-val">${c.idhm}</div><div class="stat-lbl">IDHM</div></div>
+    <div class="stat-cell"><div class="stat-val">${c.sigla}</div><div class="stat-lbl">Estado</div></div>
+  `;
+
+  // Planta urbana
+  const svg = document.getElementById('plant-svg');
+  svg.innerHTML = drawPlant(c.plant, svg);
+
+  // Briefing
+  document.getElementById('city-briefing').innerHTML = `
+    <div class="brief-section">
+      <span class="brief-lbl">Histórico</span>
+      <p class="brief-text">${c.hist}</p>
+    </div>
+    <div class="brief-section">
+      <span class="brief-lbl">Perfil econômico</span>
+      <p class="brief-text">${c.econ}</p>
+    </div>
+    <div class="brief-section">
+      <span class="brief-lbl">Indicadores sociais</span>
+      <p class="brief-text">${c.social}</p>
+    </div>
+    <div class="brief-section">
+      <span class="brief-lbl">Problema central do mandato</span>
+      <div class="problem-strip">${c.prob}</div>
+    </div>
+  `;
+
+  // Nav rápida entre cidades
+  document.getElementById('city-nav').innerHTML =
+    CIDADES.map((cc, i) =>
+      `<button class="city-nav-btn${i===idx?' active':''}" onclick="selectCity(${i})" title="${cc.nome}">${cc.sigla} ${i+1}</button>`
+    ).join('');
+}
+</script>
+</body>
+</html>
