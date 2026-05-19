@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Gestão Pública — Planejamento Estratégico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F2EC;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE6;
+  --border: #DDD9CF;
+  --border-strong: #B8B2A4;
+  --text: #1A1814;
+  --text-muted: #6B6660;
+  --text-hint: #9C9790;
+  --accent: #2D5016;
+  --accent-light: #EBF2E2;
+  --accent-mid: #4A8024;
+  --warn: #7A3B00;
+  --warn-light: #FFF0E0;
+  --danger: #7A1A1A;
+  --danger-light: #FFF0F0;
+  --info: #1A3A6B;
+  --info-light: #EBF0FA;
+  --gold: #8B6914;
+  --gold-light: #FDF5E0;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.06);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, .display {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ── LAYOUT ── */
+.shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ── HEADER ── */
+.site-header {
+  background: var(--text);
+  color: #F5F2EC;
+  padding: .75rem 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.site-header .logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  flex: 1;
+}
+.site-header .sub {
+  font-size: 11px;
+  opacity: .5;
+  letter-spacing: .04em;
+}
+.progress-wrap {
+  position: sticky;
+  top: 42px;
+  z-index: 90;
+  background: var(--bg);
+  padding: .5rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.progress-track {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent-mid);
+  border-radius: 2px;
+  transition: width .4s ease;
+}
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-hint);
+  margin-top: 4px;
+  font-family: 'Syne', sans-serif;
+  letter-spacing: .04em;
+}
+
+/* ── WELCOME ── */
+.welcome-hero {
+  padding: 3rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+.welcome-tag {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent-mid);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: block;
+}
+.welcome-hero h1 {
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  margin-bottom: .75rem;
+  line-height: 1.1;
+}
+.welcome-hero p {
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 2rem;
+}
+.rule-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .875rem 1rem;
+}
+.rule-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--border-strong);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.rule-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── MUNICÍPIO SELECTION ── */
+.section-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-hint);
+  font-weight: 600;
+  margin-bottom: .875rem;
+  display: block;
+}
+.muni-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+.muni-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.125rem 1.125rem 1rem;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+  position: relative;
+  overflow: hidden;
+}
+.muni-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--border);
+  transition: background .15s;
+}
+.muni-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow); transform: translateY(-1px); }
+.muni-card.selected { border-color: var(--accent-mid); box-shadow: 0 0 0 2px var(--accent-mid); }
+.muni-card.selected::before { background: var(--accent-mid); }
+.muni-nome { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.muni-estado { font-size: 11px; color: var(--text-hint); margin-bottom: .625rem; }
+.muni-badge {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  letter-spacing: .04em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: .5rem;
+}
+.muni-stats { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+.muni-briefing {
+  font-size: 11px;
+  color: var(--text-hint);
+  margin-top: .5rem;
+  line-height: 1.55;
+  display: none;
+}
+.muni-card.selected .muni-briefing { display: block; color: var(--text-muted); }
+
+/* Área badges */
+.b-saude  { background: #FCE8E8; color: #7A1A1A; }
+.b-edu    { background: #E8EEF8; color: #1A3A6B; }
+.b-tur    { background: #E8F4E8; color: #1A5A1A; }
+.b-fin    { background: #FDF5E0; color: #8B6914; }
+.b-infra  { background: #F0EDE6; color: #4A4540; }
+.b-log    { background: #EEE8F8; color: #3A2080; }
+
+/* ── DECISÃO ── */
+.budget-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .875rem 1.125rem;
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.budget-item { flex: 1; min-width: 120px; }
+.budget-lbl { font-size: 10px; font-family: 'Syne', sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 2px; }
+.budget-val { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+.budget-bar-wrap { flex: 2; min-width: 160px; }
+.budget-bar-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+.budget-bar-fill { height: 100%; border-radius: 3px; transition: width .4s ease, background .3s; }
+
+.dec-header {
+  margin-bottom: 1rem;
+}
+.dec-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .625rem;
+  flex-wrap: wrap;
+}
+.area-pill {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.prazo-pill {
+  font-size: 11px;
+  color: var(--text-hint);
+  border: 1px solid var(--border);
+  padding: 2px 9px;
+  border-radius: 20px;
+}
+.dec-num { font-size: 11px; color: var(--text-hint); margin-left: auto; font-family: 'Syne', sans-serif; }
+.dec-titulo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: .375rem;
+}
+.dec-contexto { font-size: 13px; color: var(--text-muted); line-height: 1.65; }
+
+.opcoes { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1.25rem; }
+.opt {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.125rem;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  position: relative;
+}
+.opt:hover { border-color: var(--border-strong); }
+.opt.selected { border-color: var(--accent-mid); box-shadow: 0 0 0 2px var(--accent-mid); }
+.opt-header { display: flex; align-items: flex-start; gap: .75rem; margin-bottom: .5rem; }
+.opt-letra {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.opt.selected .opt-letra { background: var(--accent-mid); border-color: var(--accent-mid); color: #fff; }
+.opt-titulo { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; padding-top: 3px; flex: 1; }
+.opt-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: .625rem; }
+.opt-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: .625rem; }
+.meta-pill {
+  font-size: 10px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  letter-spacing: .03em;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.m-custo { background: var(--accent-light); color: var(--accent); }
+.m-efic-hi { background: #EAF4E8; color: #1A5A1A; }
+.m-efic-md { background: var(--gold-light); color: var(--gold); }
+.m-efic-lo { background: var(--danger-light); color: var(--danger); }
+.just {
+  background: var(--surface2);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 0 6px 6px 0;
+  padding: .625rem .875rem;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.just strong { color: var(--text); font-weight: 500; }
+.impacts { display: flex; gap: 5px; flex-wrap: wrap; margin-top: .5rem; }
+.impact {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+}
+.i-pos { background: var(--accent-light); color: var(--accent); }
+.i-neg { background: var(--danger-light); color: var(--danger); }
+.i-neu { background: var(--surface2); color: var(--text-hint); }
+
+/* ── NAV ── */
+.nav-bar {
+  display: flex;
+  gap: .625rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.btn {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: .03em;
+  padding: .6rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn:hover { background: var(--surface2); }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+.btn-primary {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.btn-primary:hover { background: #2D2A24; }
+.btn-primary:disabled { opacity: .35; cursor: not-allowed; }
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-accent:hover { background: var(--accent-mid); }
+
+/* ── RESULTADO ── */
+.result-hero {
+  background: var(--text);
+  color: var(--bg);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+.result-hero::after {
+  content: attr(data-letter);
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 8rem;
+  opacity: .08;
+  line-height: 1;
+}
+.result-muni { font-size: 12px; opacity: .5; margin-bottom: .5rem; font-family: 'Syne', sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+.result-class { font-family: 'Syne', sans-serif; font-size: 1.75rem; font-weight: 800; margin-bottom: .5rem; }
+.result-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 3px 12px;
+  border-radius: 20px;
+  margin-bottom: .875rem;
+}
+.rb-A { background: #2D5016; color: #EBF2E2; }
+.rb-B { background: #1A3A6B; color: #EBF0FA; }
+.rb-C { background: #8B6914; color: #FDF5E0; }
+.rb-D { background: #7A3B00; color: #FFF0E0; }
+.rb-F { background: #7A1A1A; color: #FFF0F0; }
+.result-score { display: flex; align-items: baseline; gap: .375rem; margin-bottom: .5rem; }
+.score-big { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; line-height: 1; }
+.score-denom { opacity: .4; font-size: 1.25rem; }
+.result-desc { font-size: 13px; opacity: .7; line-height: 1.6; }
+
+.fiscal-strip {
+  border-radius: var(--radius);
+  padding: .875rem 1.125rem;
+  margin-bottom: 1.25rem;
+  font-size: 13px;
+  line-height: 1.6;
+  border-left: 4px solid;
+}
+.fs-ok   { background: var(--accent-light);  color: var(--accent);  border-color: var(--accent-mid); }
+.fs-warn { background: var(--warn-light);    color: var(--warn);    border-color: #C06000; }
+.fs-crit { background: var(--danger-light);  color: var(--danger);  border-color: #B02020; }
+
+.ind-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+.ind-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .875rem 1rem;
+}
+.ind-nome { font-size: 10px; font-family: 'Syne', sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 4px; }
+.ind-val { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+.ind-bar-t { height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+.ind-bar-f { height: 100%; border-radius: 2px; }
+
+.narrativa-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.narrativa-card p { font-size: 13.5px; color: var(--text-muted); line-height: 1.75; margin-bottom: .75rem; }
+.narrativa-card p:last-child { margin-bottom: 0; }
+
+.dec-resumo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
+.dec-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .625rem .875rem;
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+}
+.dec-row-letra {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.dec-row-info { flex: 1; }
+.dec-row-titulo { font-size: 12px; font-weight: 500; color: var(--text); font-family: 'Syne', sans-serif; margin-bottom: 1px; }
+.dec-row-escolha { font-size: 11px; color: var(--text-muted); }
+.dec-row-efic { font-size: 10px; color: var(--text-hint); margin-top: 2px; }
+
+/* ── BRIEFING MODAL ── */
+.briefing-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.briefing-wrap h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; margin-bottom: .375rem; }
+.briefing-wrap .tag { font-size: 10px; font-family: 'Syne', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 1rem; display: block; }
+.briefing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1rem; }
+.bstat { background: var(--surface2); border-radius: 7px; padding: .625rem .75rem; }
+.bstat-val { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+.bstat-lbl { font-size: 10px; color: var(--text-hint); margin-top: 2px; }
+.briefing-section { margin-bottom: .875rem; }
+.briefing-section h4 { font-family: 'Syne', sans-serif; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--text-hint); margin-bottom: .375rem; }
+.briefing-section p { font-size: 12.5px; color: var(--text-muted); line-height: 1.65; }
+.problem-strip {
+  background: var(--danger-light);
+  border-left: 3px solid #B02020;
+  border-radius: 0 7px 7px 0;
+  padding: .75rem 1rem;
+  font-size: 12.5px;
+  color: var(--danger);
+  line-height: 1.6;
+}
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+@media (max-width: 540px) {
+  .muni-grid { grid-template-columns: 1fr 1fr; }
+  .briefing-grid { grid-template-columns: repeat(3, 1fr); }
+  .result-hero::after { display: none; }
+  .ind-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Simulador de Gestão Pública</div>
+  <div class="sub">Planejamento Estratégico · Administração Pública</div>
+</header>
+
+<div class="progress-wrap" id="progress-wrap" style="display:none">
+  <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="progress-meta">
+    <span id="prog-label">Decisão 1 de 20</span>
+    <span id="prog-muni"></span>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- ══ TELA 1: BOAS-VINDAS ══ -->
+  <div id="s-welcome" class="screen active">
+    <div class="welcome-hero">
+      <span class="welcome-tag">Exercício interdisciplinar</span>
+      <h1>Você é o novo gestor.<br>O município espera.</h1>
+      <p>Neste exercício, você assumirá a prefeitura de um município fictício com desafios reais de gestão pública. Suas 20 decisões definirão o futuro da cidade ao longo de um mandato de 4 anos.</p>
+      <p style="margin-bottom:0">As decisões devem ser fundamentadas em teoria e prática da Administração Pública e do Planejamento Estratégico. Cada escolha tem impacto orçamentário, social e institucional.</p>
+    </div>
+
+    <span class="section-label">Como funciona</span>
+    <div class="rules-grid">
+      <div class="rule-card">
+        <div class="rule-num">01</div>
+        <div class="rule-text">Escolha um município com problema central específico</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-num">02</div>
+        <div class="rule-text">Leia o briefing completo antes de tomar qualquer decisão</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-num">03</div>
+        <div class="rule-text">Responda as 20 decisões sequencialmente, gerenciando o orçamento</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-num">04</div>
+        <div class="rule-text">Cada escolha tem custo fixo anual descontado da receita do mandato</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-num">05</div>
+        <div class="rule-text">A melhor combinação de eficiência + equilíbrio fiscal gera maior pontuação</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-num">06</div>
+        <div class="rule-text">Ao final, você recebe resultado por área e narrativa do mandato</div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-primary" onclick="showMuni()">Escolher município →</button>
+    </div>
+  </div>
+
+  <!-- ══ TELA 2: MUNICÍPIO ══ -->
+  <div id="s-muni" class="screen">
+    <div style="padding:2rem 0 1.5rem">
+      <span class="welcome-tag">Passo 1 de 2</span>
+      <h2 style="font-size:1.6rem;margin-bottom:.5rem">Escolha seu município</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:1.5rem">Cada cidade apresenta um desafio central diferente. Você só pode escolher um. Clique para ver o briefing completo.</p>
+    </div>
+
+    <span class="section-label">10 municípios disponíveis</span>
+    <div class="muni-grid" id="muni-grid"></div>
+
+    <div id="briefing-box" style="display:none"></div>
+
+    <div class="nav-bar">
+      <button class="btn" onclick="showWelcome()">← Voltar</button>
+      <button class="btn btn-primary" id="btn-iniciar" disabled onclick="iniciarDecisoes()">Iniciar exercício →</button>
+    </div>
+  </div>
+
+  <!-- ══ TELA 3: DECISÕES ══ -->
+  <div id="s-decisoes" class="screen">
+    <div id="dec-content"></div>
+  </div>
+
+  <!-- ══ TELA 4: RESULTADO ══ -->
+  <div id="s-resultado" class="screen">
+    <div id="res-content"></div>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+// ══ DADOS ══════════════════════════════════════════════════════════════════
+
+const MUNICIPIOS = [
+  {
+    nome:"Serraventosa", estado:"Minas Gerais", sigla:"MG",
+    problema:"Saúde", badgeClass:"b-saude",
+    pop:28400, orcAnual:62.4, idhm:"0,612", pibPc:"R$ 18.200", desemprego:"14,2%",
+    hist:"Fundada em 1887 por tropeiros mineiros às margens do caminho entre o sertão e o litoral, Serraventosa cresceu ao redor de uma feira agropecuária semanal ainda ativa. Emancipada de Montes Claros em 1962, enfrentou décadas de dependência do setor primário sem conseguir diversificar sua base produtiva.",
+    econ:"Agropecuária extensiva representa 68% do PIB (gado de corte). Pequeno comércio local e transferências federais completam o quadro. Dependência do FPM: 61% da receita corrente. Taxa de formalidade do emprego: 38%.",
+    social:"Mortalidade infantil: 22 por mil nascidos vivos (mais que o dobro da média estadual). Apenas 1 UPA e 4 UBS para toda a população. Tempo médio de espera para especialista: 11 meses. Cobertura PSF: 58%. Esgotamento sanitário: 41%.",
+    problema_desc:"Colapso progressivo do sistema de saúde: déficit de especialistas, equipamentos obsoletos, mortalidade infantil elevada e ausência de UTI própria. Encaminhamentos para Montes Claros custam R$ 3,1 mi/ano ao município.",
+    focoArea:"Saúde"
+  },
+  {
+    nome:"Várzea do Ipê", estado:"Bahia", sigla:"BA",
+    problema:"Educação", badgeClass:"b-edu",
+    pop:31200, orcAnual:58.1, idhm:"0,589", pibPc:"R$ 14.700", desemprego:"19,1%",
+    hist:"Originada de um quilombo fundado no século XVIII às margens do Rio Ipê, a cidade tem identidade cultural afro-brasileira marcante. Tornou-se município em 1948 e cresceu lentamente, com sua história de exclusão refletida nos indicadores sociais abaixo da média baiana.",
+    econ:"Agricultura familiar (mandioca, cacau, feijão), artesanato de couro e turismo cultural embrionário. FPM representa 73% da receita. PIB per capita entre os mais baixos do exercício.",
+    social:"Taxa de analfabetismo de adultos: 21,4%. Evasão escolar no ensino médio: 38%. Apenas 60% das crianças de 4-5 anos em creche ou pré-escola. IDEB do ensino fundamental: 3,2 (meta nacional: 6,0). Professores sem formação superior específica: 34%.",
+    problema_desc:"Sistema educacional em colapso estrutural: infraestrutura deteriorada (7 de 12 escolas sem biblioteca), altíssima evasão, déficit de professores qualificados e baixíssimo desempenho nas avaliações nacionais. Município no 4º quartil estadual em todos os indicadores educacionais.",
+    focoArea:"Educação"
+  },
+  {
+    nome:"Mirante das Pedras", estado:"Goiás", sigla:"GO",
+    problema:"Turismo", badgeClass:"b-tur",
+    pop:26800, orcAnual:55.7, idhm:"0,668", pibPc:"R$ 22.100", desemprego:"11,8%",
+    hist:"Surgida no ciclo do diamante do século XIX, a cidade preserva centro histórico tombado com arquitetura colonial e rica tradição de mineração artesanal. Reconhecida pelo IPHAN como sítio de interesse histórico, vive relativa decadência desde o esgotamento das jazidas nos anos 1960.",
+    econ:"Agropecuária de subsistência (32%), serviços (44%) e artesanato em pedras semi-preciosas (8%). Potencial turístico — cavernas, cachoeiras, gastronomia, festas tradicionais — sistematicamente inexplorado. Apenas 3 pousadas formais.",
+    social:"Renda média: R$ 1.340/mês. Jovens de 18-29 anos migram para Goiânia e Brasília. Taxa de formalidade do emprego: 38%. Município com potencial cultural reconhecido mas incapaz de transformá-lo em renda.",
+    problema_desc:"Enorme potencial turístico — histórico, natural e gastronômico — desperdiçado por ausência de planejamento e infraestrutura receptiva. A cidade recebe visitantes esporádicos mas não os retém. Sem hotel de médio porte, sem sinalização, sem roteiros. Estima-se captação de apenas 8% do fluxo potencial.",
+    focoArea:"Turismo"
+  },
+  {
+    nome:"Córrego Fundo do Vale", estado:"Maranhão", sigla:"MA",
+    problema:"Finanças Públicas", badgeClass:"b-fin",
+    pop:29700, orcAnual:54.2, idhm:"0,556", pibPc:"R$ 11.300", desemprego:"22,3%",
+    hist:"Município emancipado em 1985 por fragmentação político-administrativa, nasceu sem base econômica sólida. Sua criação atendeu mais a interesses políticos do que critérios de viabilidade fiscal. A história recente é marcada por déficits sucessivos e dependência crônica de recursos federais.",
+    econ:"Pesca artesanal e agricultura de subsistência representam 71% do PIB. Setor formal com apenas 2.100 empregos. Arrecadação própria (ISS+IPTU+ITBI): R$ 2,1 mi/ano — 3,9% da receita total. Sem indústrias.",
+    social:"76% dos domicílios dependem de programas de transferência de renda. Servidores municipais: 1.240. Folha de pagamento sobre RCL: 59% — próximo do limite da LRF. Dívida com fornecedores: R$ 8,7 mi.",
+    problema_desc:"Crise fiscal estrutural: arrecadação própria irrisória, despesa com pessoal próxima ao limite legal, dívidas acumuladas com fornecedores e investimentos zerados há dois anos. A prefeitura mal consegue pagar o funcionalismo regularmente.",
+    focoArea:"Finanças"
+  },
+  {
+    nome:"Pedra Branca do Sul", estado:"Rio Grande do Sul", sigla:"RS",
+    problema:"Infraestrutura Viária", badgeClass:"b-infra",
+    pop:27300, orcAnual:68.4, idhm:"0,701", pibPc:"R$ 27.800", desemprego:"7,4%",
+    hist:"Fundada em 1910 por imigrantes italianos e alemães, desenvolveu-se como polo agroindustrial regional. Cresceu de forma desordenada nas últimas três décadas, com expansão urbana sem planejamento e surgimento de distrito industrial sem infraestrutura de escoamento adequada.",
+    econ:"Agroindústria (laticínios e suínos, 41%), metal-mecânica leve (19%) e serviços (33%). PIB per capita acima da média regional. 8.900 empregos formais. Crescimento limitado hoje pela má qualidade das vias ao distrito industrial.",
+    social:"Escolaridade acima da média estadual. Renda mediana: R$ 2.100/mês. Qualidade percebida dos serviços públicos despencou nos últimos 5 anos pela deterioração viária. Duas empresas deixaram o distrito industrial por problemas logísticos.",
+    problema_desc:"Colapso da malha viária: 67% das ruas urbanas sem pavimentação ou com asfalto em estado crítico. O distrito industrial perdeu empresas. Custo estimado de recuperação integral: R$ 41 mi — 60% da receita anual.",
+    focoArea:"Infraestrutura"
+  },
+  {
+    nome:"Atalaia do Norte Velho", estado:"Pará", sigla:"PA",
+    problema:"Logística e Escoamento", badgeClass:"b-log",
+    pop:30100, orcAnual:57.3, idhm:"0,581", pibPc:"R$ 16.400", desemprego:"16,2%",
+    hist:"Cidade ribeirinha fundada no início do século XX como entreposto de borracha, mantém sua vocação fluvial. A rodovia de acesso ao estado foi concluída somente em 1991 e permanece parcialmente não pavimentada. Hub de produtos agrícolas regionais com logística precária.",
+    econ:"Agricultura (açaí, cacau, pesca, 55%), comércio regional (28%), serviços (17%). Potencial exportador de açaí estimado em 8.000 ton/ano. Perdas pós-colheita: 31%. Porto fluvial subutilizado e galpão de armazenagem sem refrigeração.",
+    social:"40% dos produtores rurais não conseguem vender toda a produção. Renda rural 43% abaixo da renda urbana local. Rodovia de acesso intransitável 60-90 dias por ano no período chuvoso.",
+    problema_desc:"Estrangulamento logístico severo: produção agrícola expressiva que não chega ao mercado por falta de vias, câmaras frias e organização da cadeia de distribuição. Porto subutilizado e necessita dragagem.",
+    focoArea:"Logística"
+  },
+  {
+    nome:"Nova Esperança da Beira", estado:"Mato Grosso do Sul", sigla:"MS",
+    problema:"Saneamento e Meio Ambiente", badgeClass:"b-infra",
+    pop:25900, orcAnual:53.8, idhm:"0,643", pibPc:"R$ 20.500", desemprego:"9,8%",
+    hist:"Município jovem (criado em 1993), surgido da colonização planejada por cooperativas agrícolas sulistas. Crescimento rápido e desordenado na primeira década. A pressão sobre os recursos hídricos da bacia do Aquidauana gerou conflitos ambientais que ameaçam o licenciamento do agronegócio.",
+    econ:"Soja e pecuária representam 78% do PIB. Ausência de tratamento de efluentes agrícolas gerou autos de infração do IBAMA e ameaça contratos de exportação de cooperativas locais que exigem certificação ambiental.",
+    social:"36% dos domicílios urbanos sem esgotamento sanitário adequado. Rio principal com contaminação fecal acima dos limites da Resolução CONAMA 357. Doenças de veiculação hídrica: 3,4x a taxa estadual.",
+    problema_desc:"Colapso do saneamento básico e passivo ambiental crescente: esgoto sem tratamento, lixão irregular e contaminação dos recursos hídricos. O passivo ameaça tanto a saúde pública quanto a viabilidade econômica do agronegócio, que depende de certificação ambiental para exportar.",
+    focoArea:"Infraestrutura"
+  },
+  {
+    nome:"Capim Grosso da Serra", estado:"Tocantins", sigla:"TO",
+    problema:"Habitação e Urbanismo", badgeClass:"b-infra",
+    pop:28800, orcAnual:56.9, idhm:"0,621", pibPc:"R$ 17.900", desemprego:"13,5%",
+    hist:"Antiga vila de garimpeiros, transformada em município em 1988. Cresceu de forma completamente irregular nas décadas de 1990 e 2000, com ocupações em áreas de risco — encostas e margens de córregos. O déficit habitacional acumulou-se sem resposta efetiva do poder público.",
+    econ:"Comércio e serviços (52%), agropecuária (31%) e construção civil informal (11%). Irregularidade fundiária impede acesso a crédito imobiliário. Município deixa de arrecadar IPTU de 38% dos imóveis por irregularidade cadastral.",
+    social:"Déficit habitacional: 3.200 unidades. Aproximadamente 4.100 pessoas em áreas de risco de deslizamento ou inundação. Apenas 31% dos imóveis com registro regular. Dois deslizamentos com desabrigados nos últimos 8 anos.",
+    problema_desc:"Crise habitacional grave com déficit de 3.200 unidades, combinada a ocupação irregular de áreas de risco. Ausência de regularização fundiária impede desenvolvimento urbano ordenado e gera perda de receita fiscal. Plano diretor não atualizado desde 2004.",
+    focoArea:"Infraestrutura"
+  },
+  {
+    nome:"Bom Jesus das Flores", estado:"Pernambuco", sigla:"PE",
+    problema:"Segurança e Coesão Social", badgeClass:"b-log",
+    pop:32600, orcAnual:61.7, idhm:"0,596", pibPc:"R$ 15.200", desemprego:"18,7%",
+    hist:"Cidade do agreste pernambucano com forte identidade cultural (festas juninas, forró, artesanato em barro). A partir dos anos 2000, esvaziamento do campo e crescimento periférico acelerado trouxeram tensões sociais. Tráfico crescente em dois bairros periféricos é o principal desafio da gestão.",
+    econ:"Serviços (49%), comércio (31%) e artesanato/economia criativa (12%). Economia informal expressiva: 44% dos trabalhadores fora do mercado formal. Centro de artesanato em barro é referência regional.",
+    social:"Taxa de homicídios: 38 por 100 mil (média nacional: 23). Dois bairros concentram 71% dos registros de violência. Jovens de 15-29 anos são 68% das vítimas. Índice de vulnerabilidade social: alto em 4 dos 8 bairros.",
+    problema_desc:"Escalada de violência urbana concentrada em jovens e bairros periféricos, associada a desemprego, baixa escolaridade e ausência de equipamentos de lazer, cultura e assistência social. A prefeitura não possui política integrada de segurança e coesão social.",
+    focoArea:"Logística"
+  },
+  {
+    nome:"São Benedito do Planalto", estado:"Minas Gerais", sigla:"MG",
+    problema:"Gestão e Modernização", badgeClass:"b-log",
+    pop:27600, orcAnual:59.3, idhm:"0,648", pibPc:"R$ 19.800", desemprego:"10,2%",
+    hist:"Município centenário (fundado em 1902) com administração pública tradicionalmente conservadora. Não apresenta crises agudas em nenhuma área específica, mas acumula ineficiências administrativas que desperdiçam recursos. Recentemente eleito um prefeito com mandato reformista.",
+    econ:"Serviços (55%), agropecuária moderada (28%) e indústria leve de alimentos (17%). Tempo médio para abertura de empresa: 43 dias (média nacional: 2 dias). Burocracia municipal é barreira apontada por empresários.",
+    social:"Satisfação com serviços públicos: 31% (DataMuni 2023). Tempo médio de atendimento presencial: 2h40. Prefeitura opera 100% em papel em 9 das 14 secretarias. Perda estimada por ineficiências: R$ 4,2 mi/ano.",
+    problema_desc:"Administração pública obsoleta: processos manuais, ausência de governo digital, licitações lentas e cultura organizacional resistente à mudança. A cidade tem recursos suficientes mas os desperdiça em processos ineficientes.",
+    focoArea:"Logística"
+  }
+];
+
+const DECISOES = [
+  {area:"Saúde",areaClass:"b-saude",titulo:"Modelo de atenção básica à saúde",contexto:"A cobertura de saúde básica é insuficiente. O município precisa definir como estruturar a porta de entrada do sistema de saúde nos próximos 4 anos.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Expansão das Unidades Básicas de Saúde (UBS)",custo:4.2,efic:72,desc:"Construir 3 novas UBS e contratar 12 profissionais via concurso público, ampliando a cobertura territorial.",just:"Fundamentada na Política Nacional de Atenção Básica (PNAB) e no modelo de Saúde da Família. A UBS é o nível primário mais custo-efetivo do SUS, reduzindo internações evitáveis em até 32% (CONASS, 2022). O concurso garante estabilidade e qualidade do quadro profissional.",impactos:["+Saúde","–Fiscal curto prazo","±Educação"]},
+      {letra:"B",titulo:"Contratação de OSS para gestão hospitalar",custo:2.8,efic:55,desc:"Firmar parceria com Organização Social de Saúde para co-gestão do hospital municipal, com metas de desempenho contratualizadas.",just:"Previsto na Lei 9.637/98. Estudos da FGV mostram ganhos de eficiência de 18-25% em hospitais geridos por OSS com indicadores bem contratualizados. Não resolve a atenção básica.",impactos:["+Hospital","±Saúde","–Controle público"]},
+      {letra:"C",titulo:"Telemedicina e PSF intensificado",custo:1.6,efic:85,desc:"Implantar plataforma de telemedicina para consultas especializadas remotas e ampliar o Programa Saúde da Família para 80% de cobertura.",just:"Custo-benefício comprovado para municípios com baixa densidade demográfica (OMS, 2021). PSF tem maior impacto em mortalidade infantil no Brasil (Victora et al., Lancet). Melhor relação custo-efetividade do conjunto.",impactos:["+Acesso remoto","+Mortalidade infantil","–Infraestrutura física"]}
+    ]},
+  {area:"Saúde",areaClass:"b-saude",titulo:"Política de saúde mental e assistência psicossocial",contexto:"O município não possui CAPS. Transtornos mentais não tratados geram absenteísmo, violência e sobrecarga no pronto-socorro.",prazo:"Longo prazo (4 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Implantação de CAPS I",custo:1.8,efic:78,desc:"Instalar CAPS I com equipe multiprofissional, grupos terapêuticos e articulação com a rede de saúde.",just:"Central da Política Nacional de Saúde Mental (Lei 10.216/01 e Portaria 3.088/11). Para municípios de 20-70 mil habitantes, o CAPS I é a estrutura adequada. Redução de 40% nas internações psiquiátricas após 3 anos.",impactos:["+Saúde mental","+Segurança","–Fiscal"]},
+      {letra:"B",titulo:"Núcleo de Apoio à Saúde da Família (NASF)",custo:0.9,efic:68,desc:"Equipe NASF com psicólogo, assistente social e terapeuta vinculados às UBS existentes.",just:"NASF-AB opera no apoio matricial às equipes de saúde da família. Recomendado pelo MS para municípios sem demanda suficiente para CAPS. Custo inferior, cobertura limitada a casos leves e moderados.",impactos:["+Atenção básica","±Saúde mental","–Casos graves"]},
+      {letra:"C",titulo:"Convênio com entidade filantrópica",custo:0.4,efic:40,desc:"Formalizar convênio com APAE ou entidade similar para atendimento psicossocial com subvenção municipal.",just:"Modelo comum em municípios pequenos. Custo reduzido, mas com risco de descontinuidade e menor controle de qualidade. TCU e CNJ alertam para fragilidades nos convênios sem monitoramento adequado.",impactos:["–Controle","–Cobertura","+Custo baixo"]}
+    ]},
+  {area:"Educação",areaClass:"b-edu",titulo:"Valorização e formação do magistério municipal",contexto:"Parte dos professores não possui habilitação específica. A qualidade do ensino está diretamente relacionada à formação e motivação docente.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Plano de Cargos, Carreiras e Salários (PCCS) com bônus de desempenho",custo:2.1,efic:80,desc:"Reestruturar o PCCS com progressão por titulação e bônus por resultados do IDEB, vinculado a avaliação docente.",just:"Exigência legal (Lei 11.738/08 — Piso Nacional) e instrumento central de valorização docente. Vinculação ao desempenho segue gestão por resultados (Bresser-Pereira). Evidências de SP e MG mostram elevação do IDEB em municípios com PCCS bem estruturado.",impactos:["+IDEB","+Retenção docente","–Folha de pagamento"]},
+      {letra:"B",titulo:"Parceria com universidade para formação continuada",custo:0.8,efic:70,desc:"Convênio com IES para oferta de licenciaturas e pós-graduação in loco para professores da rede.",just:"Formação continuada é reconhecida pela OCDE como fator de maior impacto na qualidade docente após a formação inicial. O PARFOR (MEC) pode ter custo compartilhado. Não resolve o problema salarial mas eleva titulação.",impactos:["+Qualificação","±Custo","–Salário não abordado"]},
+      {letra:"C",titulo:"Contratação emergencial via processo seletivo simplificado",custo:1.4,efic:38,desc:"Contratar professores temporários para suprir déficit imediato enquanto se planeja solução estrutural.",just:"Solução prevista na LDB para emergências educacionais. Resolve o déficit quantitativo no curto prazo, mas não aborda qualidade nem motivação. TCU questiona recorrência de contratos temporários como substituto de concurso — precarização.",impactos:["+Cobertura imediata","–Qualidade","–Estabilidade"]}
+    ]},
+  {area:"Educação",areaClass:"b-edu",titulo:"Infraestrutura e tecnologia nas escolas",contexto:"Grande parte das escolas carecem de biblioteca, laboratório e conectividade. Modernização é condição para melhoria dos indicadores educacionais.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Programa de reforma e equipamento via PAR",custo:3.5,efic:82,desc:"Acessar o Plano de Ações Articuladas (MEC) para reforma, laboratórios, bibliotecas e internet nas unidades escolares.",just:"Contrapartida municipal mínima (5-10%). Escolas com biblioteca apresentam proficiência 18 pontos acima na Prova Brasil (INEP, 2023). Melhor impacto geral entre as opções. Exige capacidade técnica para elaboração de projetos.",impactos:["+IDEB","+Evasão","+Acesso federal","–Capacidade técnica"]},
+      {letra:"B",titulo:"Laboratórios de informática com foco em STEM",custo:2.2,efic:65,desc:"Equipar 6 escolas com laboratórios de informática e implantar currículo de ciências, tecnologia, engenharia e matemática.",just:"STEM é prioridade da BNCC (2018). Maior engajamento estudantil e menor evasão. Risco: equipamentos depreciam rapidamente sem manutenção garantida.",impactos:["+Tecnologia","+Empregabilidade","–Manutenção"]},
+      {letra:"C",titulo:"Escola em tempo integral seletiva",custo:4.8,efic:60,desc:"Implantar tempo integral em 2 escolas-piloto com atividades culturais, esportivas e reforço acadêmico.",just:"Programa MEC (2023) prevê repasse de R$ 3.500/aluno/ano. Impacto positivo em aprendizagem (INSPER, 2022). Custo elevado e cobertura parcial são as principais limitações.",impactos:["+Aprendizagem","+Segurança","–Cobertura parcial"]}
+    ]},
+  {area:"Turismo",areaClass:"b-tur",titulo:"Desenvolvimento da cadeia produtiva do turismo",contexto:"O município possui atrativos históricos e naturais, mas não há estrutura receptiva organizada. Define o modelo de desenvolvimento turístico.",prazo:"Longo prazo (4 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Plano Municipal de Turismo com Fundo de Apoio",custo:1.2,efic:80,desc:"Elaborar plano estratégico de turismo com diagnóstico, roteiros, sinalização e fundo de apoio a micro-empreendedores do setor.",just:"Pré-condição para acesso a recursos do MTur via PRT 2030. Municípios com plano captam em média 3,4x mais recursos. O fundo de apoio segue modelo do SEBRAE de desenvolvimento de APL (Arranjo Produtivo Local).",impactos:["+Turismo","+Renda","+Acesso federal","–Curto prazo"]},
+      {letra:"B",titulo:"PPP para hotel e centro de eventos",custo:0.6,efic:58,desc:"Estruturar Parceria Público-Privada para atração de investidor que construa hotel de médio porte e centro de convenções.",just:"A PPP (Lei 11.079/04) permite atrair investimento sem comprometer o orçamento. A infraestrutura de hospedagem é o gargalo mais crítico (Porter, Clusters). Risco: processo lento (18-36 meses).",impactos:["+Hospedagem","+Eventos","–Tempo","–Dependência privada"]},
+      {letra:"C",titulo:"Marketing digital e turismo de experiência",custo:0.4,efic:50,desc:"Investir em presença digital e estruturar 5 roteiros de experiência com guias locais certificados.",just:"Turismo de experiência cresce 35%/ano (UNWTO, 2023). Custo baixo e retorno rápido em visibilidade. Sem infraestrutura de suporte, aumento de visitantes pode gerar experiência negativa.",impactos:["+Visibilidade","+Renda rápida","–Infraestrutura"]}
+    ]},
+  {area:"Finanças",areaClass:"b-fin",titulo:"Estratégia de equilíbrio fiscal e arrecadação",contexto:"Alta dependência de FPM e arrecadação própria insuficiente. Define a estratégia fiscal para os 4 anos de mandato.",prazo:"Curto prazo (até 1 ano)",
+    opcoes:[
+      {letra:"A",titulo:"Modernização tributária e cadastro imobiliário",custo:0.9,efic:90,desc:"Recadastramento imobiliário (IPTU), atualização de planta de valores e implantação de nota fiscal eletrônica (ISS).",just:"Municípios com cadastro atualizado elevam arrecadação de IPTU em 40-120%. Payback em 8-14 meses (STN/BNDES). Amparado na LC 101/00 (LRF), art. 11. Maior retorno estrutural entre as opções.",impactos:["+Receita própria","+Sustentabilidade","±Popularidade"]},
+      {letra:"B",titulo:"REFIS municipal — renegociação de dívidas",custo:0.2,efic:55,desc:"Programa de anistia de multas e juros para contribuintes inadimplentes, com parcelamento em até 48 meses.",just:"Gera liquidez imediata mas pode criar moral hazard. CNM recomenda como medida conjunta à modernização cadastral, nunca isolada. Sem base estrutural, o efeito se esgota em 12-18 meses.",impactos:["+Caixa imediato","–Moral hazard","±Receita estrutural"]},
+      {letra:"C",titulo:"Incentivos fiscais para atração de empresas",custo:0.0,efic:45,desc:"Zona de incentivo fiscal com redução de ISS e IPTU para empresas que gerem empregos formais.",just:"Prática contestada pelo TCU e STF quando não observa a LC 116/03. Impacto positivo no emprego se bem regulamentado. Risco de renúncia sem contrapartida efetiva. Custo zero mas requer aprovação da Câmara.",impactos:["+Emprego","+Desenvolvimento","–Receita imediata","–Risco jurídico"]}
+    ]},
+  {area:"Finanças",areaClass:"b-fin",titulo:"Gestão da folha de pagamento e controle de pessoal",contexto:"Despesa com pessoal consome parcela elevada da RCL. A LRF estabelece limite de 60% para o Executivo municipal.",prazo:"Curto prazo (até 1 ano)",
+    opcoes:[
+      {letra:"A",titulo:"Auditoria e reestruturação do quadro de servidores",custo:0.5,efic:85,desc:"Auditoria para mapear cargos ociosos, desvios de função e servidores em duplicidade; implementar plano de adequação.",just:"LRF (LC 101/00) obriga ação preventiva quando a despesa de pessoal supera 95% do limite. TCU e Tribunais de Contas reconhecem a auditoria como instrumento legítimo. Municípios reduziram folha em 8-15% sem demissões.",impactos:["+Fiscal","+Eficiência","–Resistência interna"]},
+      {letra:"B",titulo:"Congelamento de novas contratações",custo:0.0,efic:50,desc:"Moratória em contratações por 24 meses, reduzindo folha via aposentadorias naturais.",just:"Previsto na LRF e PREFIS. Impacto gradual ao longo do mandato. Risco de deterioração dos serviços por vacâncias não preenchidas, especialmente em saúde e educação.",impactos:["+Fiscal gradual","–Serviços","–Concurso público"]},
+      {letra:"C",titulo:"PDV — Programa de Demissão Voluntária",custo:1.8,efic:65,desc:"PDV com incentivo de 1,5 salário por ano de serviço para servidores próximos à aposentadoria.",just:"Instrumento legítimo de racionalização do quadro. Payback em 18-30 meses. TCU recomenda combinação com reorganização funcional, não apenas como corte de pessoal.",impactos:["+Redução rápida","–Custo inicial","±Serviços"]}
+    ]},
+  {area:"Finanças",areaClass:"b-fin",titulo:"Captação de recursos externos e gestão de convênios",contexto:"Dependência excessiva do FPM. Convênios federais e estaduais podem ampliar investimentos sem endividamento.",prazo:"Curto prazo (até 1 ano)",
+    opcoes:[
+      {letra:"A",titulo:"Escritório de Projetos e Captação (EGP)",custo:0.6,efic:92,desc:"Criar EGP dedicado à elaboração de projetos técnicos e captação de recursos federais e estaduais.",just:"Municípios com EGP captam R$ 4,80 por R$ 1,00 investido (FNP, 2022). Metodologia PMI/PMBOK aplicada ao setor público. Maior ROI entre as três opções de captação.",impactos:["+Captação","+Projetos","+ROI elevado","–Tempo de estruturação"]},
+      {letra:"B",titulo:"Consórcio intermunicipal de captação",custo:0.3,efic:72,desc:"Aderir a consórcio regional para compartilhar equipe técnica de projetos e licitações.",just:"Consórcios públicos (Lei 11.107/05) permitem municípios pequenos alcançar escala. Custo 60-70% inferior ao EGP próprio. Menor autonomia na definição de prioridades.",impactos:["+Escala","+Custo baixo","–Autonomia"]},
+      {letra:"C",titulo:"Operação de crédito via BNDES ou CEF",custo:0.0,efic:40,desc:"Contratar operação de crédito com BNDES ou Caixa para financiar investimentos em infraestrutura.",just:"Permitido pela LRF dentro dos limites (60% da RCL). Gera capacidade imediata de investimento mas compromete receitas futuras. Requer aprovação do Senado Federal para contratos acima de R$ 1,5 mi.",impactos:["+Investimento imediato","–Endividamento","–Receita futura"]}
+    ]},
+  {area:"Infraestrutura",areaClass:"b-infra",titulo:"Política de pavimentação e manutenção viária",contexto:"Malha viária com alto índice de deterioração. Define a estratégia de recuperação e manutenção das vias municipais.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Pavimentação priorizada por fluxo (IRI)",custo:5.8,efic:75,desc:"Levantamento viário completo pelo IRI e pavimentação priorizando fluxo, acesso a serviços e escoamento de produção.",just:"Metodologia de priorização por IRI recomendada pelo DNIT e IPEA. Retorno de R$ 1,80 por R$ 1,00 investido (IPEA, 2021). Pavimentar sem critério gera impacto 5x menor.",impactos:["+Mobilidade","+Econômico","–Orçamento intensivo"]},
+      {letra:"B",titulo:"Manutenção preventiva e tapa-buracos sistematizado",custo:2.1,efic:88,desc:"Sistema de monitoramento georeferenciado de vias e equipe de manutenção preventiva contínua.",just:"Manutenção preventiva custa em média 1/6 do valor da reconstrução total (ABNT NBR 7207). Municípios com monitoramento viário reduziram custo de manutenção em 38% em 5 anos. Solução mais sustentável.",impactos:["+Sustentabilidade","±Vias","–Passivo atual"]},
+      {letra:"C",titulo:"Convênio estadual para vias coletoras",custo:1.0,efic:62,desc:"Negociar convênio com Departamento Estadual de Estradas para 8 km de vias coletoras (contrapartida 10%).",just:"Principal fonte de recursos viários para municípios de pequeno porte. Contrapartida mínima maximiza o investimento. Dependência do calendário e das prioridades estaduais.",impactos:["+Alavancagem","–Dependência estadual","–Prazo incerto"]}
+    ]},
+  {area:"Infraestrutura",areaClass:"b-infra",titulo:"Saneamento básico: água e esgoto",contexto:"Parte da população sem esgotamento adequado. O Novo Marco do Saneamento (Lei 14.026/20) exige universalização até 2033.",prazo:"Longo prazo (4 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Concessão plena dos serviços de saneamento",custo:0.4,efic:70,desc:"Licitar concessão com empresa privada, contrato de 30 anos com metas de universalização obrigatórias.",just:"Marco do Saneamento (Lei 14.026/20) incentiva concessões com metas contratualizadas. Expansão de 30-45% da rede em 5 anos observada em municípios paulistas. Risco de perda do controle tarifário.",impactos:["+Universalização","–Controle tarifário","+Orçamento liberado"]},
+      {letra:"B",titulo:"Parceria com SAAE ou CASAN regional",custo:0.8,efic:68,desc:"Contrato de programa com autarquia estadual para operação e expansão da rede.",just:"Modelo mais comum em municípios pequenos. Acesso a financiamentos do FGTS e BNDES. Gestão pública mantida. Expansão mais lenta que a concessão privada.",impactos:["+Controle público","±Velocidade","+Financiamento"]},
+      {letra:"C",titulo:"PAC Saneamento — investimento direto",custo:3.2,efic:80,desc:"Elaborar projeto e acessar PAC Saneamento para ETE e expansão da rede municipal.",just:"PAC financia até 90% para municípios de baixa renda. Cada R$ 1,00 investido gera R$ 4,00 de retorno em saúde (Trata Brasil, 2023). Exige capacidade técnica para elaboração do projeto.",impactos:["+Saúde","+Controle","–Capacidade técnica","–Tempo"]}
+    ]},
+  {area:"Logística",areaClass:"b-log",titulo:"Escoamento da produção agropecuária",contexto:"Produtores rurais perdem produção por dificuldades de acesso ao mercado. A logística de escoamento é gargalo do desenvolvimento.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Central de abastecimento municipal (CEAM)",custo:2.4,efic:72,desc:"Central com câmaras frias, área de comercialização e plataforma logística para concentrar e escoar a produção.",just:"CEAMs seguem modelo das CEASAs em escala municipal. Reduzem perdas pós-colheita de 25-40% e aumentam poder de negociação dos produtores. MAPA possui financiamento específico.",impactos:["+Renda rural","–Perdas","±Gestão"]},
+      {letra:"B",titulo:"Programa permanente de manutenção de estradas rurais",custo:1.6,efic:83,desc:"Programa de manutenção de estradas vicinais com terraplanagem e cascalhamento sistemático.",just:"Estradas vicinais em bom estado reduzem custo de frete rural em 25-40%. Programa Estrada Rural (MDA) oferece apoio. Custo-benefício superior à pavimentação. Alta sustentabilidade.",impactos:["+Acesso rural","+Produtividade","–Manutenção contínua"]},
+      {letra:"C",titulo:"Cooperativa municipal de logística",custo:0.8,efic:68,desc:"Apoiar criação de cooperativa de produtores para gestão de transporte, armazenagem e comercialização.",just:"Cooperativismo gera renda rural 32% superior (OCB, 2022). Maior sustentabilidade de longo prazo. Papel do poder público é de fomento — não gestão direta. Depende do engajamento dos produtores.",impactos:["+Sustentabilidade","+Renda","–Engajamento necessário"]}
+    ]},
+  {area:"Logística",areaClass:"b-log",titulo:"Desenvolvimento do distrito industrial e atração empresarial",contexto:"O município precisa ampliar a base econômica, reduzir dependência do setor primário e gerar emprego formal.",prazo:"Longo prazo (4 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Distrito industrial com infraestrutura básica",custo:3.8,efic:65,desc:"DI com lotes urbanizados, energia trifásica, água industrial e acesso viário para indústrias de pequeno e médio porte.",just:"Provisão pública de infraestrutura é a principal política de atração em municípios pequenos (IEDI, 2021). Média de 240 empregos diretos por 10 ha ocupados. BNDES possui linha específica para parques industriais.",impactos:["+Emprego","+Arrecadação","–Investimento alto"]},
+      {letra:"B",titulo:"Incubadora de negócios e economia criativa",custo:1.1,efic:75,desc:"Incubadora municipal focada em startups locais, agronegócio digital e economia criativa em parceria com SEBRAE.",just:"ROI de R$ 8,00 por R$ 1,00 investido pelo poder público (ANPROTEC, 2022). Cria empresas de maior valor agregado. Impacto no emprego menor no curto prazo.",impactos:["+Inovação","+Jovens","–Curto prazo"]},
+      {letra:"C",titulo:"Missões empresariais e marketing territorial",custo:0.5,efic:40,desc:"Participar de feiras nacionais, produzir material de atração e realizar visitas a empresas-alvo.",just:"Marketing territorial é necessário mas insuficiente sem infraestrutura. ROI incerto quando isolado. Recomendado como complemento à opção A, não como estratégia única.",impactos:["+Visibilidade","–ROI incerto","–Sem infraestrutura"]}
+    ]},
+  {area:"Infraestrutura",areaClass:"b-infra",titulo:"Gestão de resíduos sólidos",contexto:"Município ainda opera com disposição irregular. A Lei 14.026/20 obriga o encerramento de lixões e destinação adequada.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Consórcio regional para aterro sanitário",custo:1.2,efic:78,desc:"Aderir a consórcio intermunicipal para aterro sanitário regional, encerrando o lixão existente.",just:"Dilui investimento de R$ 8-15 mi entre municípios. PNRS (Lei 12.305/10) e Marco do Saneamento exigem eliminação de lixões. Não cumprimento suspende repasses federais.",impactos:["+Legal","+Ambiental","–Autonomia"]},
+      {letra:"B",titulo:"Coleta seletiva e compostagem municipal",custo:0.9,efic:70,desc:"Coleta seletiva em 100% da área urbana e central de compostagem para resíduos orgânicos.",just:"Reduz volume de resíduos em 30-50%. Composto orgânico pode ser comercializado para agricultores. Custo operacional elevado no início. Exige engajamento comunitário.",impactos:["+Ambiental","±Legal","–Engajamento"]},
+      {letra:"C",titulo:"Concessão da gestão de resíduos a empresa privada",custo:0.3,efic:62,desc:"Licitar concessão de coleta, transporte e destinação a empresa especializada.",just:"Tendência crescente (ABRELPE, 2023). Transfere ônus ao privado. Requer contrato com metas ambientais claras. Risco de repasse de custo ao cidadão via taxa de lixo.",impactos:["+Eficiência","–Custo ao cidadão","±Ambiental"]}
+    ]},
+  {area:"Saúde",areaClass:"b-saude",titulo:"Vigilância epidemiológica e prevenção de doenças",contexto:"Incidências acima da média estadual em doenças evitáveis. Prevenção é mais custo-efetiva que o tratamento.",prazo:"Curto prazo (até 1 ano)",
+    opcoes:[
+      {letra:"A",titulo:"Centro de Vigilância Epidemiológica municipal",custo:0.7,efic:88,desc:"Setor de vigilância com sistema de informação, notificação compulsória e resposta rápida a surtos.",just:"Competência municipal obrigatória (Lei 8.080/90). CVE estruturado detecta surtos 14 dias antes, reduzindo impacto em 60% (MS, 2022). Investimento baixo com alto retorno em custos hospitalares evitados.",impactos:["+Prevenção","+Dados","–Custo baixo"]},
+      {letra:"B",titulo:"Campanhas de vacinação e educação em saúde",custo:0.5,efic:75,desc:"Intensificar campanhas de vacinação e ações de educação em saúde em escolas e comunidades.",just:"R$ 1 investido evita R$ 44 em tratamento (OMS). Integração com escolas amplifica o alcance. Complementa mas não substitui estrutura permanente de vigilância.",impactos:["+Cobertura vacinal","+Educação","–Estrutura permanente"]},
+      {letra:"C",titulo:"Programa de saúde do trabalhador e ambiente",custo:0.6,efic:65,desc:"Vigilância de saúde do trabalhador e monitoramento ambiental, foco em agrotóxicos e trabalho rural.",just:"Em municípios agropecuários, exposição a agrotóxicos é determinante negligenciado. CEREST disponível por convênio estadual. Impacto direto em mortalidade prematura e doenças crônicas.",impactos:["+Saúde rural","+Ambiental","–Visibilidade política"]}
+    ]},
+  {area:"Educação",areaClass:"b-edu",titulo:"Combate à evasão escolar e inclusão educacional",contexto:"Taxa de evasão elevada, especialmente no ensino médio, impacta o futuro econômico e perpetua ciclos de pobreza.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Bolsa Municipal de Permanência",custo:1.4,efic:72,desc:"Transferência de renda condicionada à frequência escolar para famílias em vulnerabilidade social.",just:"Transferências condicionadas são o instrumento mais eficaz para redução da evasão em contextos de vulnerabilidade (Banco Mundial, 2020). Complementa o Bolsa Família. Exige monitoramento robusto.",impactos:["+Frequência","–Evasão","–Fiscal"]},
+      {letra:"B",titulo:"Busca ativa e monitoramento de frequência",custo:0.6,efic:80,desc:"Sistema de alerta de ausências com busca ativa de estudantes evadidos por assistentes sociais.",just:"Custo baixo e alto impacto. Recomendado pelo UNICEF e MEC. Redução de 28-41% na evasão com busca ativa estruturada (INEP, 2022). Não resolve causas estruturais.",impactos:["+Frequência","±Causas","–Custo baixo"]},
+      {letra:"C",titulo:"EJA fortalecida e educação profissional integrada",custo:1.1,efic:65,desc:"Ampliar a EJA e criar curso técnico noturno integrado ao ensino médio em parceria com SENAI.",just:"Para jovens que já deixaram a escola por trabalho, EJA com profissionalização é a única alternativa viável. PROEJA (Decreto 5.840/06). Impacto positivo em renda e formalização do mercado local.",impactos:["+EJA","+Emprego","+Renda"]}
+    ]},
+  {area:"Turismo",areaClass:"b-tur",titulo:"Preservação do patrimônio histórico e cultural",contexto:"Edificações históricas e manifestações culturais se perdem por falta de atenção. Patrimônio é ativo turístico e de identidade.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Tombamento e restauro do centro histórico",custo:2.6,efic:75,desc:"Protocolar tombamento municipal e acessar Programa Monumenta/IPHAN para restauro das edificações.",just:"Tombamento gera acesso a financiamentos do IPHAN e UNESCO e valoriza o entorno em 15-25%. ROI positivo via turismo em 5-8 anos. Exige equipe técnica de patrimônio.",impactos:["+Turismo","+Identidade","+IPHAN","–Tempo"]},
+      {letra:"B",titulo:"Festival cultural anual com apoio do MinC",custo:0.7,efic:65,desc:"Criar festival anual que celebre a história local com apoio do MinC e patrocínios via Lei de Incentivo à Cultura.",just:"Lei Rouanet financia até 80% dos custos. Municípios com festival estruturado aumentam fluxo turístico em 200-400% nos períodos. Não substitui preservação física do patrimônio.",impactos:["+Turismo sazonal","+Identidade","–Preservação física"]},
+      {letra:"C",titulo:"Inventário cultural participativo e mapeamento digital",custo:0.3,efic:55,desc:"Inventário do patrimônio material e imaterial com participação comunitária e plataforma digital.",just:"Etapa técnica obrigatória antes de qualquer política de patrimônio (IPHAN, IN 01/2009). Custo mínimo, orienta decisões futuras. Isolado, sem impacto turístico imediato.",impactos:["+Planejamento","+Identidade","–Turismo imediato"]}
+    ]},
+  {area:"Logística",areaClass:"b-log",titulo:"Mobilidade urbana e transporte coletivo",contexto:"Mobilidade intraurbana precária. Trabalhadores sem veículo têm dificuldade de acesso a emprego, saúde e educação.",prazo:"Curto prazo (até 1 ano)",
+    opcoes:[
+      {letra:"A",titulo:"Linha de transporte coletivo municipal subsidiado",custo:1.8,efic:70,desc:"Linha de ônibus subsidiada conectando bairros periféricos ao centro, hospital e escolas.",just:"Transporte coletivo é direito social (EC 90/2015). Municípios com TU reduzem absenteísmo nas empresas em 12%. Subsídio pode ser parcialmente coberto pelo FNTU.",impactos:["+Inclusão","+Acesso","–Subsídio fiscal"]},
+      {letra:"B",titulo:"Programa de bicicletas públicas e ciclovias",custo:0.6,efic:78,desc:"Sistema de bicicletas compartilhadas e 4 km de ciclovias nas vias principais.",just:"Municípios pequenos têm perfil ideal para mobilidade ativa. Custo: R$ 50-80 mil/km de ciclovia vs R$ 3-5 mi/km de asfalto. Impacto positivo em saúde e meio ambiente.",impactos:["+Saúde","+Ambiental","–Distâncias longas"]},
+      {letra:"C",titulo:"Regulação de transporte por demanda",custo:0.3,efic:55,desc:"Regular aplicativo de transporte por demanda, integrando a oferta informal existente.",just:"Custo zero para o município. Cobre rotas não atendidas por linhas fixas. Não garante acesso universal — depende da renda do usuário. Mantém a lógica de transporte individual.",impactos:["+Cobertura","–Acessibilidade","±Regulação"]}
+    ]},
+  {area:"Infraestrutura",areaClass:"b-infra",titulo:"Habitação e regularização fundiária",contexto:"Déficit habitacional e irregularidade fundiária impedem acesso a crédito, valorização imobiliária e cobrança regular de impostos.",prazo:"Longo prazo (4 anos)",
+    opcoes:[
+      {letra:"A",titulo:"REURB-S — Regularização Fundiária de Interesse Social",custo:1.0,efic:85,desc:"REURB-S nas áreas de ocupação consolidada, emitindo Certidão de Regularização Fundiária.",just:"Lei 13.465/17. Regularização aumenta valor dos imóveis em 20-35%, amplia base do IPTU e acesso a crédito. Custo baixo com impacto fiscal e social de longo prazo.",impactos:["+Fiscal","+Crédito","+Social","–Tempo longo"]},
+      {letra:"B",titulo:"Plano Local de Habitação (PLHIS)",custo:0.5,efic:70,desc:"PLHIS para diagnóstico do déficit, mapeamento de áreas de risco e programação de intervenções.",just:"Condição para acesso ao FNHIS e programa Minha Casa Minha Vida para municípios com menos de 50 mil hab. Custo baixo, impacto de longo prazo. Frequentemente negligenciado.",impactos:["+Acesso federal","–Direto imediato","+Planejamento"]},
+      {letra:"C",titulo:"Urbanização de assentamentos precários via PAC",custo:4.2,efic:68,desc:"Obras de urbanização (drenagem, iluminação, pavimentação) em 2 assentamentos informais prioritários.",just:"Socialmente preferível à remoção (art. 6º CF/88). PAC Urbanização financia até 95%. Impacto imediato na qualidade de vida. Não resolve irregularidade jurídica sem REURB complementar.",impactos:["+Qualidade de vida","+Social","–Jurídico sem REURB"]}
+    ]},
+  {area:"Infraestrutura",areaClass:"b-infra",titulo:"Energia, iluminação pública e eficiência energética",contexto:"O custo de energia pesa no orçamento. Iluminação deficiente afeta segurança e qualidade de vida urbana.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Substituição por LED e telemetria da iluminação",custo:1.5,efic:88,desc:"Substituir toda iluminação pública por LED com sistema de telemetria para controle remoto e detecção de falhas.",just:"Reduz consumo em 50-70%. Payback de 3-5 anos. Programa Reluz (ANEEL). Economia de R$ 0,8-1,2 mi/ano. Tempo de resposta a falhas: de 72h para 4h.",impactos:["+Economia","+Segurança","+Ambiental"]},
+      {letra:"B",titulo:"Energia solar em prédios públicos via BNDES",custo:2.1,efic:72,desc:"Painéis fotovoltaicos em escolas, UBS e prédios administrativos, financiados via BNDES Finem.",just:"Custo solar caiu 85% na última década. Payback de 5-7 anos, vida útil de 25-30 anos. BNDES financia 80%. Impacto ambiental positivo. Não afeta a iluminação pública.",impactos:["+Economia longa","±Segurança","+Ambiental"]},
+      {letra:"C",titulo:"Contrato ESCo de eficiência energética",custo:0.0,efic:65,desc:"Empresa de serviços energéticos investe e recebe o retorno da economia de energia gerada.",just:"Modernização sem investimento inicial público. Adotado com sucesso no RS e SC. Risco: contrato de longo prazo com parceiro privado exige auditoria técnica rigorosa.",impactos:["+Economia sem investimento","–Controle","–Longo contrato"]}
+    ]},
+  {area:"Logística",areaClass:"b-log",titulo:"Governo digital e modernização administrativa",contexto:"A digitalização dos serviços reduz custos, aumenta transparência e melhora a experiência do cidadão.",prazo:"Médio prazo (2–3 anos)",
+    opcoes:[
+      {letra:"A",titulo:"Portal de serviços digitais e processo eletrônico",custo:1.3,efic:82,desc:"Portal online para alvarás, certidões, agendamentos e processo administrativo eletrônico em todas as secretarias.",just:"Reduz custo de atendimento presencial em 60-80% e tempo de processos em 45% (ENAP, 2023). Gov.br disponível gratuitamente para municípios. Gestão da mudança é o maior desafio.",impactos:["+Eficiência","+Transparência","–Resistência cultural"]},
+      {letra:"B",titulo:"ERP municipal integrado em nuvem",custo:1.8,efic:70,desc:"ERP integrando financeiro, RH, patrimônio, saúde e educação em nuvem com suporte contínuo.",just:"Elimina retrabalho e duplicidade de dados. Fechamento contábil cai de 30 para 5 dias. Melhora prestações de conta ao TCE. Custo recorrente de licença precisa ser planejado.",impactos:["+Gestão interna","+Controle","±Cidadão"]},
+      {letra:"C",titulo:"Capacitação digital de servidores",custo:0.4,efic:60,desc:"Formação em tecnologia, Excel avançado e ferramentas digitais para todos os servidores municipais.",just:"Transformação digital falha em 70% dos casos sem capacitação humana (McKinsey, 2021). Pré-condição para qualquer outra iniciativa digital. Custo mínimo mas sem impacto imediato ao cidadão.",impactos:["+Base digital","–Visibilidade imediata","+Transversal"]}
+    ]}
+];
+
+const AREA_BADGE = {
+  "Saúde":"b-saude","Educação":"b-edu","Turismo":"b-tur",
+  "Finanças":"b-fin","Infraestrutura":"b-infra","Logística":"b-log"
+};
+
+// ══ ESTADO ══
+let muniIdx = null;
+let decAtual = 0;
+let respostas = new Array(DECISOES.length).fill(null);
+
+// ══ NAVEGAÇÃO ══
+function showWelcome(){
+  setScreen('s-welcome');
+  document.getElementById('progress-wrap').style.display='none';
+}
+function showMuni(){
+  renderMunis();
+  setScreen('s-muni');
+  document.getElementById('progress-wrap').style.display='none';
+}
+function setScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ══ MUNICÍPIOS ══
+function renderMunis(){
+  const grid = document.getElementById('muni-grid');
+  grid.innerHTML = MUNICIPIOS.map((m,i)=>`
+    <div class="muni-card${muniIdx===i?' selected':''}" onclick="selecionarMuni(${i})">
+      <div class="muni-nome">${m.nome}</div>
+      <div class="muni-estado">${m.estado} (${m.sigla})</div>
+      <span class="muni-badge ${m.badgeClass}">${m.problema}</span>
+      <div class="muni-stats">
+        Pop: ${m.pop.toLocaleString('pt-BR')} hab.<br>
+        Orçamento: R$ ${m.orcAnual} mi/ano · IDHM ${m.idhm}
+      </div>
+      <div class="muni-briefing">${m.focoArea ? m.problema_desc : ''}</div>
+    </div>`).join('');
+}
+
+function selecionarMuni(i){
+  muniIdx = i;
+  renderMunis();
+  document.getElementById('btn-iniciar').disabled = false;
+  renderBriefing(i);
+  document.getElementById('briefing-box').style.display='block';
+}
+
+function renderBriefing(i){
+  const m = MUNICIPIOS[i];
+  document.getElementById('briefing-box').innerHTML = `
+  <div class="briefing-wrap">
+    <span class="tag">Briefing completo — leia antes de iniciar</span>
+    <h3>${m.nome} — ${m.estado}</h3>
+    <div class="briefing-grid">
+      <div class="bstat"><div class="bstat-val">${m.pop.toLocaleString('pt-BR')}</div><div class="bstat-lbl">Habitantes</div></div>
+      <div class="bstat"><div class="bstat-val">R$ ${m.orcAnual} mi</div><div class="bstat-lbl">Receita anual</div></div>
+      <div class="bstat"><div class="bstat-val">${m.idhm}</div><div class="bstat-lbl">IDHM</div></div>
+      <div class="bstat"><div class="bstat-val">${m.pibPc}</div><div class="bstat-lbl">PIB per capita</div></div>
+      <div class="bstat"><div class="bstat-val">${m.desemprego}</div><div class="bstat-lbl">Desemprego</div></div>
+      <div class="bstat"><div class="bstat-val">R$ ${(m.orcAnual*4).toFixed(1)} mi</div><div class="bstat-lbl">Orçamento 4 anos</div></div>
+    </div>
+    <div class="briefing-section">
+      <h4>Histórico</h4><p>${m.hist}</p>
+    </div>
+    <div class="briefing-section">
+      <h4>Perfil econômico</h4><p>${m.econ}</p>
+    </div>
+    <div class="briefing-section">
+      <h4>Perfil social e indicadores</h4><p>${m.social}</p>
+    </div>
+    <div class="briefing-section">
+      <h4>Problema central do mandato</h4>
+      <div class="problem-strip">${m.problema_desc}</div>
+    </div>
+  </div>`;
+}
+
+function iniciarDecisoes(){
+  if(muniIdx===null) return;
+  decAtual=0; respostas=new Array(DECISOES.length).fill(null);
+  document.getElementById('progress-wrap').style.display='block';
+  document.getElementById('prog-muni').textContent = MUNICIPIOS[muniIdx].nome;
+  setScreen('s-decisoes');
+  renderDecisao();
+}
+
+// ══ DECISÕES ══
+function calcGastosAnuais(){
+  return respostas.reduce((s,r,i)=> r!==null ? s+DECISOES[i].opcoes[r].custo : s, 0);
+}
+
+function renderDecisao(){
+  const d = DECISOES[decAtual];
+  const m = MUNICIPIOS[muniIdx];
+  const orcTotal = m.orcAnual*4;
+  const gAnual = calcGastosAnuais();
+  const gTotal = gAnual*4;
+  const pct = Math.min(100, Math.round(gTotal/orcTotal*100));
+  const barColor = pct>50 ? '#B02020' : pct>35 ? '#C06000' : '#2D5016';
+
+  const prog = Math.round((decAtual+1)/DECISOES.length*100);
+  document.getElementById('prog-fill').style.width = prog+'%';
+  document.getElementById('prog-label').textContent = `Decisão ${decAtual+1} de ${DECISOES.length}`;
+
+  let html = `
+  <div style="padding:1.5rem 0 1rem">
+  <div class="budget-strip">
+    <div class="budget-item">
+      <div class="budget-lbl">Orçamento do mandato</div>
+      <div class="budget-val">R$ ${orcTotal.toFixed(1)} mi</div>
+    </div>
+    <div class="budget-item">
+      <div class="budget-lbl">Comprometido</div>
+      <div class="budget-val" style="color:${barColor}">R$ ${gTotal.toFixed(1)} mi (${pct}%)</div>
+    </div>
+    <div class="budget-bar-wrap">
+      <div class="budget-lbl">Uso do orçamento</div>
+      <div class="budget-bar-track"><div class="budget-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+    </div>
+  </div>
+
+  <div class="dec-header">
+    <div class="dec-breadcrumb">
+      <span class="area-pill ${AREA_BADGE[d.area]}">${d.area}</span>
+      <span class="prazo-pill">${d.prazo}</span>
+      <span class="dec-num">${decAtual+1} / ${DECISOES.length}</span>
+    </div>
+    <div class="dec-titulo">${d.titulo}</div>
+    <div class="dec-contexto">${d.contexto}</div>
+  </div>
+
+  <div class="opcoes">`;
+
+  d.opcoes.forEach((op,i)=>{
+    const sel = respostas[decAtual]===i;
+    const eficClass = op.efic>=80 ? 'm-efic-hi' : op.efic>=60 ? 'm-efic-md' : 'm-efic-lo';
+    html += `
+    <div class="opt${sel?' selected':''}" onclick="escolher(${i})">
+      <div class="opt-header">
+        <div class="opt-letra">${op.letra}</div>
+        <div class="opt-titulo">${op.titulo}</div>
+      </div>
+      <div class="opt-desc">${op.desc}</div>
+      <div class="opt-meta">
+        <span class="meta-pill m-custo">R$ ${op.custo.toFixed(1)} mi/ano</span>
+        <span class="meta-pill ${eficClass}">Eficiência orçamentária: ${op.efic}/100</span>
+        <span class="meta-pill" style="background:var(--surface2);color:var(--text-hint)">${d.prazo.split(' ')[0]}</span>
+      </div>
+      <div class="just"><strong>Fundamento técnico:</strong> ${op.just}</div>
+      <div class="impacts">${op.impactos.map(imp=>{
+        const c = imp.startsWith('+') ? 'i-pos' : imp.startsWith('–') ? 'i-neg' : 'i-neu';
+        return `<span class="impact ${c}">${imp}</span>`;
+      }).join('')}</div>
+    </div>`;
+  });
+
+  html += `</div>
+  <div class="nav-bar">
+    <button class="btn" onclick="voltarDec()" ${decAtual===0?'disabled':''}>← Anterior</button>
+    ${decAtual < DECISOES.length-1
+      ? `<button class="btn btn-primary" onclick="avancarDec()" ${respostas[decAtual]===null?'disabled':''}>Próxima decisão →</button>`
+      : `<button class="btn btn-accent" onclick="mostrarResultado()" ${respostas[decAtual]===null?'disabled':''}>Ver resultado do mandato →</button>`
+    }
+  </div>
+  </div>`;
+
+  document.getElementById('dec-content').innerHTML = html;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function escolher(i){ respostas[decAtual]=i; renderDecisao(); }
+function avancarDec(){ if(decAtual<DECISOES.length-1){decAtual++;renderDecisao();} }
+function voltarDec(){ if(decAtual>0){decAtual--;renderDecisao();} }
+
+// ══ PONTUAÇÃO ══
+function calcularPontuacao(){
+  const m = MUNICIPIOS[muniIdx];
+  const orcTotal = m.orcAnual*4;
+
+  let somaEfic = 0, somaCusto = 0;
+  respostas.forEach((r,i)=>{
+    const op = DECISOES[i].opcoes[r];
+    somaEfic += op.efic;
+    somaCusto += op.custo*4;
+  });
+
+  const eficMedia = somaEfic / DECISOES.length;
+  const pctGasto = somaCusto / orcTotal;
+
+  // Bônus fiscal — quem gere melhor o orçamento recebe pontuação maior
+  let bonusFiscal = 0;
+  if(pctGasto<=0.20) bonusFiscal=15;
+  else if(pctGasto<=0.30) bonusFiscal=10;
+  else if(pctGasto<=0.40) bonusFiscal=5;
+  else if(pctGasto>0.55) bonusFiscal=-10;
+  else if(pctGasto>0.50) bonusFiscal=-5;
+
+  // Penalidade por decisões de baixa eficiência (< 50)
+  let penBaixa = 0;
+  respostas.forEach((r,i)=>{ if(DECISOES[i].opcoes[r].efic<50) penBaixa+=3; });
+
+  const total = Math.max(0, Math.min(100, Math.round(eficMedia+bonusFiscal-penBaixa)));
+
+  // Pontuação por área
+  const areas = ["Saúde","Educação","Turismo","Finanças","Infraestrutura","Logística"];
+  const porArea = {};
+  areas.forEach(a=>{
+    const idx = DECISOES.map((d,i)=>d.area===a?i:-1).filter(x=>x>=0);
+    const eficA = idx.reduce((s,i)=>s+DECISOES[i].opcoes[respostas[i]].efic,0)/idx.length;
+    const custoA = idx.reduce((s,i)=>s+DECISOES[i].opcoes[respostas[i]].custo,0)*4;
+    const pctA = custoA/orcTotal;
+    const bonusA = pctA<0.05?8:pctA<0.10?4:pctA>0.25?-5:0;
+    porArea[a] = Math.max(0,Math.min(100,Math.round(eficA+bonusA)));
+  });
+
+  // Bônus de foco no problema central do município
+  const fa = m.focoArea;
+  if(porArea[fa]>=78) porArea[fa]=Math.min(100,porArea[fa]+5);
+
+  return { total, porArea, pctGasto:Math.round(pctGasto*100), somaCusto:somaCusto.toFixed(1), eficMedia:Math.round(eficMedia) };
+}
+
+function getClass(score){
+  if(score>=88) return {letra:"A",label:"Gestor(a) exemplar",desc:"Excelente equilíbrio entre eficiência orçamentária e impacto nas políticas públicas. Suas escolhas demonstram domínio dos instrumentos de planejamento estratégico e gestão pública. Referência de mandato."};
+  if(score>=75) return {letra:"B",label:"Boa gestão",desc:"Decisões sólidas com boa relação custo-benefício e evidências técnicas consistentes. Algumas oportunidades de otimização foram perdidas, mas o balanço do mandato é claramente positivo."};
+  if(score>=60) return {letra:"C",label:"Gestão regular",desc:"Desempenho mediano. O município avançou em algumas frentes, mas com custo excessivo ou impacto limitado em outras. Há espaço significativo para melhoria na análise de custo-efetividade."};
+  if(score>=45) return {letra:"D",label:"Gestão insuficiente",desc:"Decisões de baixa eficiência ou comprometimento excessivo do orçamento resultaram em oportunidades perdidas. O município não avançou na medida do esperado diante dos recursos disponíveis."};
+  return {letra:"F",label:"Gestão crítica",desc:"A combinação de alto gasto e baixa eficiência deixou o município em situação mais frágil ao final do mandato. Os desafios estruturais não apenas persistem como em alguns casos se aprofundaram."};
+}
+
+function gerarNarrativa(pts, cl, m){
+  const pct=pts.pctGasto, efic=pts.eficMedia;
+  const areas=pts.porArea;
+  const melhor=Object.entries(areas).sort((a,b)=>b[1]-a[1])[0];
+  const pior=Object.entries(areas).sort((a,b)=>a[1]-b[1])[0];
+
+  const intros = {
+    A:`Ao final de quatro anos, ${m.nome} consolidou-se como um caso de referência em gestão pública municipal no ${m.estado}. O mandato combinou rigor técnico nas escolhas, uso eficiente dos recursos e fidelidade às evidências da literatura de Administração Pública. Os indicadores sociais avançaram de forma consistente, sem comprometer o equilíbrio fiscal.`,
+    B:`Após quatro anos à frente de ${m.nome}, o balanço do mandato é positivo. Houve avanços concretos em diversas áreas, escolhas respaldadas por fundamentos técnicos sólidos e uma trajetória geral de melhoria. Algumas oportunidades de maximizar o custo-benefício foram deixadas de lado, mas o resultado final supera a média esperada para um município de mesmo porte.`,
+    C:`O mandato em ${m.nome} encerra com resultados mistos. Houve progresso em algumas frentes, mas também escolhas de custo elevado ou impacto limitado que pesaram no balanço final. A população percebe melhorias pontuais, mas problemas estruturais centrais permanecem sem resposta adequada. O mandato foi de boa intenção mas planejamento estratégico insuficiente.`,
+    D:`Quatro anos se passaram em ${m.nome} e o quadro é de oportunidades perdidas. O mandato foi marcado por decisões com baixa relação custo-efetividade ou por comprometimento excessivo do orçamento, deixando pouca margem para o próximo gestor. Os desafios que justificaram o pleito seguem presentes, alguns em situação mais grave.`,
+    F:`O mandato em ${m.nome} encerra em situação crítica. A combinação de decisões de baixa eficiência com comprometimento excessivo das finanças municipais gerou um legado de recursos desperdiçados e oportunidades inexploradas. O município chega ao fim do período mais frágil fiscal e administrativamente do que estava no início.`
+  };
+
+  const fiscalTexts = {
+    ok:`A gestão fiscal foi um dos pontos fortes do mandato: apenas ${pct}% do orçamento de quatro anos foi comprometido em novas iniciativas, preservando margem confortável para contingências e para o próximo gestor. Esse equilíbrio é, por si só, um indicador de planejamento estratégico maduro — saber o que não fazer é tão importante quanto saber o que fazer.`,
+    warn:`A situação fiscal encerra de forma equilibrada, com ${pct}% do orçamento comprometido. O município não enfrenta crise fiscal imediata, mas a margem disponível para o próximo mandato é modesta. As escolhas de investimento foram razoavelmente calibradas ao tamanho da receita, mas há espaço para maior disciplina orçamentária.`,
+    crit:`A situação fiscal é o grande passivo do mandato: ${pct}% do orçamento de quatro anos foi comprometido, gerando pressão sobre as contas públicas e limitando seriamente a margem do próximo gestor. O desafio de gerir políticas públicas dentro dos limites da Lei de Responsabilidade Fiscal — e de maximizar o impacto por real investido — não foi adequadamente enfrentado.`
+  };
+  const fStatus = pct<=35?'ok':pct<=50?'warn':'crit';
+
+  const destaque=`No balanço setorial, a área de ${melhor[0]} se destacou positivamente (${melhor[1]}/100), com escolhas que combinaram fundamento técnico robusto e uso eficiente dos recursos. Em contrapartida, a área de ${pior[0]} (${pior[1]}/100) ficou aquém do esperado — seja por escolhas de menor eficiência técnica, seja por alocação de recursos desproporcional ao retorno gerado.`;
+
+  return [intros[cl.letra], fiscalTexts[fStatus], destaque];
+}
+
+function getBarColor(v){ return v>=80?'#2D5016':v>=65?'#8B6914':'#7A1A1A'; }
+
+// ══ RESULTADO ══
+function mostrarResultado(){
+  document.getElementById('progress-wrap').style.display='none';
+  setScreen('s-resultado');
+
+  const m = MUNICIPIOS[muniIdx];
+  const pts = calcularPontuacao();
+  const cl = getClass(pts.total);
+  const narr = gerarNarrativa(pts, cl, m);
+  const areas = ["Saúde","Educação","Turismo","Finanças","Infraestrutura","Logística"];
+  const fiscalClass = pts.pctGasto<=35?'fs-ok':pts.pctGasto<=50?'fs-warn':'fs-crit';
+
+  let html = `
+  <div style="padding-top:1.5rem">
+
+  <div class="result-hero" data-letter="${cl.letra}">
+    <div class="result-muni">${m.nome} · ${m.estado} · ${m.pop.toLocaleString('pt-BR')} hab.</div>
+    <div class="result-class">${cl.label}</div>
+    <div><span class="result-badge rb-${cl.letra}">Conceito ${cl.letra}</span></div>
+    <div class="result-score">
+      <span class="score-big">${pts.total}</span>
+      <span class="score-denom">/ 100 pontos</span>
+    </div>
+    <div class="result-desc">${cl.desc}</div>
+  </div>
+
+  <div class="fiscal-strip ${fiscalClass}">
+    <strong>Situação fiscal do mandato:</strong> R$ ${pts.somaCusto} mi comprometidos de R$ ${(m.orcAnual*4).toFixed(1)} mi disponíveis (${pts.pctGasto}% do orçamento de 4 anos). Eficiência orçamentária média das 20 decisões: ${pts.eficMedia}/100.
+  </div>
+
+  <span class="section-label">Indicadores por área</span>
+  <div class="ind-grid">
+    ${areas.map(a=>`
+    <div class="ind-card">
+      <div class="ind-nome">${a}</div>
+      <div class="ind-val" style="color:${getBarColor(pts.porArea[a])}">${pts.porArea[a]}</div>
+      <div class="ind-bar-t"><div class="ind-bar-f" style="width:${pts.porArea[a]}%;background:${getBarColor(pts.porArea[a])}"></div></div>
+    </div>`).join('')}
+  </div>
+
+  <div class="divider"></div>
+  <span class="section-label">Narrativa do mandato</span>
+  <div class="narrativa-card">
+    ${narr.map(p=>`<p>${p}</p>`).join('')}
+  </div>
+
+  <div class="divider"></div>
+  <span class="section-label">Resumo das suas 20 decisões</span>
+  <div class="dec-resumo">
+    ${DECISOES.map((d,i)=>{
+      const op = d.opcoes[respostas[i]];
+      const eficClass = op.efic>=80?'#2D5016':op.efic>=60?'#8B6914':'#7A1A1A';
+      return `<div class="dec-row">
+        <div class="dec-row-letra">${op.letra}</div>
+        <div class="dec-row-info">
+          <div class="dec-row-titulo">${d.titulo}</div>
+          <div class="dec-row-escolha">${op.titulo}</div>
+          <div class="dec-row-efic" style="color:${eficClass}">R$ ${op.custo.toFixed(1)} mi/ano · Eficiência: ${op.efic}/100 · ${d.prazo.split(' ')[0]}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn" onclick="reiniciar()">← Refazer exercício</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir resultado</button>
+  </div>
+  </div>`;
+
+  document.getElementById('res-content').innerHTML = html;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function reiniciar(){
+  muniIdx=null; decAtual=0; respostas=new Array(DECISOES.length).fill(null);
+  document.getElementById('briefing-box').style.display='none';
+  document.getElementById('btn-iniciar').disabled=true;
+  showWelcome();
+}
+</script>
+</body>
+</html>
