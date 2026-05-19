@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard do Professor — Simulador de Gestão Pública</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F2EC;--surface:#FFF;--surface2:#F0EDE6;--border:#DDD9CF;--border-s:#B8B2A4;
+  --text:#1A1814;--muted:#6B6660;--hint:#9C9790;
+  --green:#2D5016;--green-l:#EBF2E2;--green-m:#4A8024;
+  --amber:#8B6914;--amber-l:#FDF5E0;
+  --red:#7A1A1A;--red-l:#FFF0F0;
+  --blue:#1A3A6B;--blue-l:#EBF0FA;
+  --radius:10px;--radius-lg:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+h1,h2,h3,h4,.syne{font-family:'Syne',sans-serif;font-weight:700}
+
+/* ── HEADER ── */
+.hdr{background:var(--text);color:#F5F2EC;padding:.75rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100}
+.hdr-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;flex:1}
+.hdr-sub{font-size:11px;opacity:.4;letter-spacing:.04em}
+.hdr-count{font-family:'Syne',sans-serif;font-size:12px;background:rgba(255,255,255,.1);padding:3px 10px;border-radius:20px}
+
+/* ── SHELL ── */
+.shell{max-width:1100px;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+
+/* ── UPLOAD ZONE ── */
+.upload-zone{
+  border:2px dashed var(--border-s);border-radius:var(--radius-lg);
+  padding:3rem 2rem;text-align:center;
+  background:var(--surface);cursor:pointer;
+  transition:border-color .2s,background .2s;
+  margin-bottom:1.5rem;
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--green-m);background:var(--green-l)}
+.upload-zone h3{font-size:1.1rem;margin-bottom:.5rem}
+.upload-zone p{font-size:13px;color:var(--muted);margin-bottom:1rem}
+.upload-btn{
+  display:inline-block;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;
+  letter-spacing:.04em;padding:.55rem 1.25rem;border-radius:7px;
+  border:1px solid var(--border-s);background:var(--surface2);color:var(--text);cursor:pointer;
+  transition:background .15s
+}
+.upload-btn:hover{background:var(--border)}
+#file-input{display:none}
+
+/* ── SECTION LABEL ── */
+.sec-lbl{font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--hint);font-weight:600;margin-bottom:.75rem;display:block}
+
+/* ── METRIC CARDS ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:1.5rem}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.875rem 1rem}
+.metric-lbl{font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--hint);margin-bottom:4px}
+.metric-val{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800}
+.metric-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:1.25rem;flex-wrap:wrap}
+.tab{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;letter-spacing:.03em;padding:.45rem 1rem;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s}
+.tab:hover{background:var(--surface2)}
+.tab.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.panel{display:none}.panel.active{display:block}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--hint);font-weight:600;padding:.625rem .875rem;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--surface2);cursor:pointer;user-select:none}
+thead th:hover{color:var(--text)}
+thead th .sort-arrow{opacity:.3;margin-left:3px}
+thead th.sort-asc .sort-arrow::after{content:'↑';opacity:1}
+thead th.sort-desc .sort-arrow::after{content:'↓';opacity:1}
+tbody tr{border-bottom:.5px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+td{padding:.6rem .875rem;vertical-align:middle}
+.badge-conc{display:inline-block;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;padding:2px 8px;border-radius:4px;min-width:22px;text-align:center}
+.c-A{background:#EBF2E2;color:#2D5016}
+.c-B{background:#EBF0FA;color:#1A3A6B}
+.c-C{background:#FDF5E0;color:#8B6914}
+.c-D{background:#FFF0E0;color:#7A3B00}
+.c-F{background:#FFF0F0;color:#7A1A1A}
+.score-cell{font-family:'Syne',sans-serif;font-weight:700}
+.bar-cell{display:flex;align-items:center;gap:6px}
+.mini-bar{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;min-width:50px}
+.mini-fill{height:100%;border-radius:3px}
+
+/* ── FILTROS ── */
+.filtros{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.filtro-select{font-family:'DM Sans',sans-serif;font-size:13px;padding:.45rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer}
+.filtro-input{font-family:'DM Sans',sans-serif;font-size:13px;padding:.45rem .75rem;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);min-width:200px}
+.btn-sm{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.03em;padding:.4rem .9rem;border-radius:6px;border:1px solid var(--border-s);background:var(--surface);color:var(--text);cursor:pointer;transition:background .15s}
+.btn-sm:hover{background:var(--surface2)}
+.btn-sm.danger{border-color:#B02020;color:#7A1A1A}
+.btn-sm.danger:hover{background:var(--red-l)}
+
+/* ── GRID DE ANÁLISE ── */
+.analise-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
+@media(max-width:680px){.analise-grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.125rem}
+.card h4{font-family:'Syne',sans-serif;font-size:13px;margin-bottom:.875rem}
+
+/* ── ÁREA INDICADORES ── */
+.area-row{display:flex;align-items:center;gap:10px;margin-bottom:.625rem}
+.area-nome{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;width:100px;flex-shrink:0;color:var(--muted)}
+.area-bar-t{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.area-bar-f{height:100%;border-radius:4px;transition:width .4s}
+.area-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;width:32px;text-align:right}
+
+/* ── DISTRIBUIÇÃO ABC ── */
+.dec-abc{margin-bottom:.75rem}
+.dec-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.abc-bars{display:flex;gap:3px;height:20px;border-radius:4px;overflow:hidden}
+.abc-seg{display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:10px;font-weight:800;color:#fff;transition:width .4s;min-width:0;overflow:hidden}
+.seg-a{background:#2D5016}
+.seg-b{background:#1A3A6B}
+.seg-c{background:#7A3B00}
+.abc-legend{display:flex;gap:10px;margin-top:3px}
+.abc-leg-item{font-size:10px;color:var(--hint);display:flex;align-items:center;gap:4px}
+.abc-dot{width:7px;height:7px;border-radius:50%}
+
+/* ── COMPARATIVO DE MUNICÍPIOS ── */
+.muni-compare{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:1.5rem}
+.muni-crd{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.875rem 1rem}
+.muni-crd-nome{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:2px}
+.muni-crd-count{font-size:11px;color:var(--hint);margin-bottom:.5rem}
+.muni-score-avg{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;margin-bottom:4px}
+
+/* ── DETALHE DO ALUNO ── */
+.aluno-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.aluno-modal.open{display:flex}
+.modal-box{background:var(--surface);border-radius:var(--radius-lg);max-width:700px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.modal-hdr{display:flex;align-items:center;gap:1rem;padding:1.125rem 1.25rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:10}
+.modal-hdr h3{font-size:1rem;flex:1}
+.modal-close{font-size:18px;cursor:pointer;color:var(--muted);line-height:1;background:none;border:none;padding:4px 8px}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:1.25rem}
+.modal-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.25rem}
+.m-met{background:var(--surface2);border-radius:7px;padding:.625rem .75rem}
+.m-met-val{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800}
+.m-met-lbl{font-size:10px;color:var(--hint);margin-top:2px}
+.dec-list{display:flex;flex-direction:column;gap:5px}
+.dec-li{background:var(--surface2);border-radius:7px;padding:.5rem .75rem;display:flex;gap:.75rem;align-items:flex-start}
+.dec-li-n{font-family:'Syne',sans-serif;font-size:10px;font-weight:800;color:var(--hint);width:16px;flex-shrink:0;padding-top:1px}
+.dec-li-info{flex:1}
+.dec-li-titulo{font-size:12px;font-weight:500;margin-bottom:1px;font-family:'Syne',sans-serif}
+.dec-li-escolha{font-size:11px;color:var(--muted)}
+.area-badge-sm{font-size:9px;font-weight:700;font-family:'Syne',sans-serif;padding:1px 6px;border-radius:3px;margin-right:4px}
+.b-saude{background:#FCE8E8;color:#7A1A1A}
+.b-edu{background:#E8EEF8;color:#1A3A6B}
+.b-tur{background:#E8F4E8;color:#1A5A1A}
+.b-fin{background:#FDF5E0;color:#8B6914}
+.b-infra{background:#F0EDE6;color:#4A4540}
+.b-log{background:#EEE8F8;color:#3A2080}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:4rem 2rem;color:var(--hint)}
+.empty h3{font-size:1.1rem;margin-bottom:.5rem;color:var(--muted)}
+.empty p{font-size:13px}
+
+/* ── EXPORT ── */
+.export-row{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap}
+
+/* ── RESPONSIVE ── */
+@media(max-width:540px){
+  .metrics{grid-template-columns:1fr 1fr}
+  .analise-grid{grid-template-columns:1fr}
+  .modal-metrics{grid-template-columns:1fr 1fr}
+}
+
+@media print{
+  .upload-zone,.tabs,.filtros,.export-row,.aluno-modal,.hdr{display:none!important}
+  .panel{display:block!important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-logo">Painel do Professor — Gestão Pública</div>
+  <div class="hdr-sub">Análise de resultados · Planejamento Estratégico</div>
+  <div class="hdr-count" id="hdr-count">0 alunos</div>
+</header>
+
+<div class="shell">
+
+  <!-- UPLOAD -->
+  <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+    ondragover="ev(event,'drag')" ondragleave="ev(event,'')" ondrop="onDrop(event)">
+    <h3>Carregar arquivos de resultado</h3>
+    <p>Arraste os arquivos .json enviados pelos alunos ou clique para selecionar</p>
+    <span class="upload-btn">Selecionar arquivos JSON</span>
+    <input type="file" id="file-input" multiple accept=".json" onchange="onFileInput(this)">
+  </div>
+
+  <!-- AVISO quando vazio -->
+  <div id="empty-state" class="empty">
+    <h3>Nenhum resultado carregado ainda</h3>
+    <p>Carregue os arquivos JSON enviados pelos alunos para ver o dashboard completo.</p>
+  </div>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div id="main-content" style="display:none">
+
+    <!-- MÉTRICAS GERAIS -->
+    <span class="sec-lbl">Visão geral da turma</span>
+    <div class="metrics" id="metrics-gerais"></div>
+
+    <!-- EXPORT -->
+    <div class="export-row">
+      <button class="btn-sm" onclick="exportCSV()">⬇ Exportar CSV</button>
+      <button class="btn-sm" onclick="window.print()">Imprimir relatório</button>
+      <button class="btn-sm danger" onclick="limparTudo()">Limpar todos os dados</button>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('tab-alunos',this)">Todos os alunos</button>
+      <button class="tab" onclick="showTab('tab-areas',this)">Indicadores por área</button>
+      <button class="tab" onclick="showTab('tab-decisoes',this)">Análise de decisões</button>
+      <button class="tab" onclick="showTab('tab-municipios',this)">Por município</button>
+    </div>
+
+    <!-- ══ TAB: ALUNOS ══ -->
+    <div id="tab-alunos" class="panel active">
+      <div class="filtros">
+        <input class="filtro-input" type="text" id="filtro-nome" placeholder="Filtrar por nome..." oninput="renderTabelaAlunos()">
+        <select class="filtro-select" id="filtro-muni" onchange="renderTabelaAlunos()">
+          <option value="">Todos os municípios</option>
+        </select>
+        <select class="filtro-select" id="filtro-conc" onchange="renderTabelaAlunos()">
+          <option value="">Todos os conceitos</option>
+          <option value="A">Conceito A</option>
+          <option value="B">Conceito B</option>
+          <option value="C">Conceito C</option>
+          <option value="D">Conceito D</option>
+          <option value="F">Conceito F</option>
+        </select>
+        <select class="filtro-select" id="filtro-sort" onchange="renderTabelaAlunos()">
+          <option value="nome">Ordenar: Nome</option>
+          <option value="pontos-desc">Ordenar: Maior pontuação</option>
+          <option value="pontos-asc">Ordenar: Menor pontuação</option>
+          <option value="orcamento-asc">Ordenar: Menor gasto %</option>
+          <option value="orcamento-desc">Ordenar: Maior gasto %</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Aluno</th>
+              <th>Município</th>
+              <th>Conceito</th>
+              <th>Pontuação</th>
+              <th>Orçamento usado</th>
+              <th>Efic. média</th>
+              <th>Turma</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-alunos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ TAB: ÁREAS ══ -->
+    <div id="tab-areas" class="panel">
+      <div class="analise-grid" id="areas-grid"></div>
+
+      <span class="sec-lbl">Distribuição de conceitos por área</span>
+      <div class="card" style="margin-bottom:1.5rem">
+        <div id="area-conc-dist"></div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: DECISÕES ══ -->
+    <div id="tab-decisoes" class="panel">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem">Distribuição das escolhas A/B/C em cada uma das 20 decisões. Identifique padrões e divergências entre os alunos.</p>
+      <div id="decisoes-dist"></div>
+    </div>
+
+    <!-- ══ TAB: MUNICÍPIOS ══ -->
+    <div id="tab-municipios" class="panel">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem">Desempenho médio agrupado por município escolhido. Identifique se algum cenário foi sistematicamente melhor ou pior aproveitado.</p>
+      <div class="muni-compare" id="muni-compare"></div>
+
+      <span class="sec-lbl" style="margin-top:1rem">Cruzamento: município × conceito</span>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Município</th>
+              <th>Alunos</th>
+              <th>Pontuação média</th>
+              <th>Melhor conceito</th>
+              <th>Pior conceito</th>
+              <th>Média orçamento usado</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-municipios"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+
+</div><!-- /shell -->
+
+<!-- MODAL DETALHE DO ALUNO -->
+<div class="aluno-modal" id="modal-aluno">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3 id="modal-titulo">Detalhe do aluno</h3>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ══ ESTADO ══════════════════════════════════════════════════════════════════
+let alunos = [];
+
+const DECISOES_NOMES = [
+  "Modelo de atenção básica à saúde",
+  "Política de saúde mental",
+  "Valorização do magistério municipal",
+  "Infraestrutura e tecnologia nas escolas",
+  "Cadeia produtiva do turismo",
+  "Equilíbrio fiscal e arrecadação",
+  "Gestão da folha de pagamento",
+  "Captação de recursos externos",
+  "Política viária e pavimentação",
+  "Saneamento básico",
+  "Escoamento da produção agropecuária",
+  "Distrito industrial e atração empresarial",
+  "Gestão de resíduos sólidos",
+  "Vigilância epidemiológica",
+  "Combate à evasão escolar",
+  "Preservação do patrimônio cultural",
+  "Mobilidade urbana",
+  "Habitação e regularização fundiária",
+  "Energia e iluminação pública",
+  "Governo digital e modernização"
+];
+
+const AREA_DEC = {
+  "Saúde":[0,1,13],"Educação":[2,3,14],"Turismo":[4,15],
+  "Finanças":[5,6,7],"Infraestrutura":[8,9,12,17,18],"Logística":[10,11,16,19]
+};
+
+const AREA_BADGE_MAP = {
+  "Saúde":"b-saude","Educação":"b-edu","Turismo":"b-tur",
+  "Finanças":"b-fin","Infraestrutura":"b-infra","Logística":"b-log"
+};
+
+// ══ UPLOAD ════════════════════════════════════════════════════════════════
+function ev(e, cls){
+  e.preventDefault(); e.stopPropagation();
+  const z = document.getElementById('drop-zone');
+  z.className = 'upload-zone' + (cls ? ' '+cls : '');
+}
+
+function onDrop(e){
+  ev(e,''); const files = e.dataTransfer.files; processFiles(files);
+}
+function onFileInput(el){ processFiles(el.files); el.value=''; }
+
+async function processFiles(files){
+  const arr = Array.from(files).filter(f=>f.name.endsWith('.json'));
+  if(!arr.length) return;
+  for(const f of arr){
+    try{
+      const txt = await f.text();
+      const data = JSON.parse(txt);
+      if(!data.aluno || !data.pontuacao || !data.decisoes) continue;
+      // evitar duplicatas pelo nome
+      const exists = alunos.findIndex(a=>a.aluno.nome===data.aluno.nome);
+      if(exists>=0) alunos[exists]=data; else alunos.push(data);
+    }catch(err){ console.warn('JSON inválido:', f.name, err); }
+  }
+  renderTudo();
+}
+
+// ══ RENDER ════════════════════════════════════════════════════════════════
+function renderTudo(){
+  const n = alunos.length;
+  document.getElementById('hdr-count').textContent = n+' aluno'+(n!==1?'s':'');
+  document.getElementById('empty-state').style.display = n ? 'none' : 'block';
+  document.getElementById('main-content').style.display = n ? 'block' : 'none';
+  if(!n) return;
+
+  populaFiltroMuni();
+  renderMetricas();
+  renderTabelaAlunos();
+  renderAreas();
+  renderDecisoesDist();
+  renderMunicipios();
+}
+
+function populaFiltroMuni(){
+  const sel = document.getElementById('filtro-muni');
+  const munis = [...new Set(alunos.map(a=>a.municipio.nome))].sort();
+  sel.innerHTML = '<option value="">Todos os municípios</option>' +
+    munis.map(m=>`<option value="${m}">${m}</option>`).join('');
+}
+
+// ── MÉTRICAS GERAIS
+function renderMetricas(){
+  const pts = alunos.map(a=>a.pontuacao.total);
+  const avg = pts.reduce((s,x)=>s+x,0)/pts.length;
+  const max = Math.max(...pts); const min = Math.min(...pts);
+  const concs = {A:0,B:0,C:0,D:0,F:0};
+  alunos.forEach(a=>concs[a.pontuacao.conceito]=(concs[a.pontuacao.conceito]||0)+1);
+  const melhor = alunos.reduce((b,a)=>a.pontuacao.total>b.pontuacao.total?a:b);
+  const avgOrc = alunos.reduce((s,a)=>s+a.pontuacao.pctOrcamento,0)/alunos.length;
+
+  document.getElementById('metrics-gerais').innerHTML = `
+    <div class="metric"><div class="metric-lbl">Total de alunos</div><div class="metric-val">${alunos.length}</div><div class="metric-sub">arquivos carregados</div></div>
+    <div class="metric"><div class="metric-lbl">Pontuação média</div><div class="metric-val" style="color:${barColor(avg)}">${avg.toFixed(1)}</div><div class="metric-sub">de 100 pontos</div></div>
+    <div class="metric"><div class="metric-lbl">Melhor resultado</div><div class="metric-val" style="color:${barColor(max)}">${max}</div><div class="metric-sub">${melhor.aluno.nome.split(' ')[0]}</div></div>
+    <div class="metric"><div class="metric-lbl">Menor resultado</div><div class="metric-val" style="color:${barColor(min)}">${min}</div><div class="metric-sub">pontos</div></div>
+    <div class="metric"><div class="metric-lbl">Dist. de conceitos</div><div class="metric-val" style="font-size:1rem;display:flex;gap:5px;flex-wrap:wrap;padding-top:4px">${['A','B','C','D','F'].map(c=>`<span class="badge-conc c-${c}">${c}: ${concs[c]||0}</span>`).join('')}</div></div>
+    <div class="metric"><div class="metric-lbl">Orçamento médio usado</div><div class="metric-val" style="color:${avgOrc>50?'var(--red)':avgOrc>35?'var(--amber)':'var(--green)'}">${avgOrc.toFixed(0)}%</div><div class="metric-sub">do mandato</div></div>
+  `;
+}
+
+// ── TABELA DE ALUNOS
+function renderTabelaAlunos(){
+  const filtNome = document.getElementById('filtro-nome').value.toLowerCase();
+  const filtMuni = document.getElementById('filtro-muni').value;
+  const filtConc = document.getElementById('filtro-conc').value;
+  const sortKey  = document.getElementById('filtro-sort').value;
+
+  let lista = alunos.filter(a=>{
+    if(filtNome && !a.aluno.nome.toLowerCase().includes(filtNome)) return false;
+    if(filtMuni && a.municipio.nome !== filtMuni) return false;
+    if(filtConc && a.pontuacao.conceito !== filtConc) return false;
+    return true;
+  });
+
+  lista.sort((a,b)=>{
+    if(sortKey==='nome') return a.aluno.nome.localeCompare(b.aluno.nome);
+    if(sortKey==='pontos-desc') return b.pontuacao.total - a.pontuacao.total;
+    if(sortKey==='pontos-asc')  return a.pontuacao.total - b.pontuacao.total;
+    if(sortKey==='orcamento-asc')  return a.pontuacao.pctOrcamento - b.pontuacao.pctOrcamento;
+    if(sortKey==='orcamento-desc') return b.pontuacao.pctOrcamento - a.pontuacao.pctOrcamento;
+    return 0;
+  });
+
+  const rank = [...alunos].sort((a,b)=>b.pontuacao.total-a.pontuacao.total);
+
+  document.getElementById('tbody-alunos').innerHTML = lista.length ? lista.map(a=>{
+    const pos = rank.findIndex(r=>r.aluno.nome===a.aluno.nome)+1;
+    const orcPct = a.pontuacao.pctOrcamento;
+    const orcColor = orcPct>50?'var(--red)':orcPct>35?'var(--amber)':'var(--green)';
+    return `<tr>
+      <td><span style="font-size:10px;color:var(--hint);margin-right:6px">#${pos}</span><strong>${a.aluno.nome}</strong></td>
+      <td>${a.municipio.nome}</td>
+      <td><span class="badge-conc c-${a.pontuacao.conceito}">${a.pontuacao.conceito}</span></td>
+      <td><span class="score-cell" style="color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</span></td>
+      <td>
+        <div class="bar-cell">
+          <div class="mini-bar"><div class="mini-fill" style="width:${orcPct}%;background:${orcColor}"></div></div>
+          <span style="font-size:11px;color:${orcColor};font-family:Syne,sans-serif;font-weight:700">${orcPct}%</span>
+        </div>
+      </td>
+      <td style="font-family:Syne,sans-serif;font-size:12px">${a.pontuacao.eficMedia}</td>
+      <td style="font-size:11px;color:var(--hint)">${a.aluno.turma||'—'}</td>
+      <td><button class="btn-sm" onclick="abrirModal('${a.aluno.nome.replace(/'/g,"\\'")}')">Ver detalhe</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint)">Nenhum aluno encontrado com esses filtros.</td></tr>`;
+}
+
+// ── ÁREAS
+function renderAreas(){
+  const areas = Object.keys(AREA_DEC);
+  const grid = document.getElementById('areas-grid');
+  grid.innerHTML = areas.map(area=>{
+    const vals = alunos.map(a=>a.indicadoresPorArea[area]).filter(v=>v!=null);
+    const avg = vals.length ? (vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(1) : 'N/A';
+    const mx = vals.length ? Math.max(...vals) : 0;
+    const mn = vals.length ? Math.min(...vals) : 0;
+    return `<div class="card">
+      <h4>${area} — média ${avg}/100</h4>
+      <div class="area-row">
+        <span class="area-nome">Média</span>
+        <div class="area-bar-t"><div class="area-bar-f" style="width:${avg}%;background:${barColor(avg)}"></div></div>
+        <span class="area-val" style="color:${barColor(avg)}">${avg}</span>
+      </div>
+      <div class="area-row">
+        <span class="area-nome">Máximo</span>
+        <div class="area-bar-t"><div class="area-bar-f" style="width:${mx}%;background:${barColor(mx)}"></div></div>
+        <span class="area-val" style="color:${barColor(mx)}">${mx}</span>
+      </div>
+      <div class="area-row">
+        <span class="area-nome">Mínimo</span>
+        <div class="area-bar-t"><div class="area-bar-f" style="width:${mn}%;background:${barColor(mn)}"></div></div>
+        <span class="area-val" style="color:${barColor(mn)}">${mn}</span>
+      </div>
+      <div style="font-size:11px;color:var(--hint);margin-top:.625rem">
+        Distribuição: ${vals.filter(v=>v>=80).length} acima de 80 · ${vals.filter(v=>v<60).length} abaixo de 60
+      </div>
+    </div>`;
+  }).join('');
+
+  // Dist de conceitos por área
+  const concArea = document.getElementById('area-conc-dist');
+  concArea.innerHTML = areas.map(area=>{
+    const vals = alunos.map(a=>a.indicadoresPorArea[area]).filter(v=>v!=null);
+    const a80 = vals.filter(v=>v>=80).length;
+    const b65 = vals.filter(v=>v>=65&&v<80).length;
+    const c = vals.filter(v=>v<65).length;
+    const tot = vals.length||1;
+    const pA = (a80/tot*100).toFixed(0);
+    const pB = (b65/tot*100).toFixed(0);
+    const pC = (c/tot*100).toFixed(0);
+    return `<div class="dec-abc">
+      <div class="dec-label" style="font-family:Syne,sans-serif;font-weight:600">${area}</div>
+      <div class="abc-bars">
+        <div class="abc-seg seg-a" style="width:${pA}%">${pA>8?pA+'%':''}</div>
+        <div class="abc-seg seg-b" style="width:${pB}%">${pB>8?pB+'%':''}</div>
+        <div class="abc-seg seg-c" style="width:${pC}%">${pC>8?pC+'%':''}</div>
+      </div>
+    </div>`;
+  }).join('') + `<div class="abc-legend">
+    <span class="abc-leg-item"><span class="abc-dot" style="background:#2D5016"></span>≥80 pontos</span>
+    <span class="abc-leg-item"><span class="abc-dot" style="background:#1A3A6B"></span>65–79</span>
+    <span class="abc-leg-item"><span class="abc-dot" style="background:#7A3B00"></span>&lt;65 pontos</span>
+  </div>`;
+}
+
+// ── DISTRIBUIÇÃO DAS DECISÕES
+function renderDecisoesDist(){
+  const el = document.getElementById('decisoes-dist');
+  el.innerHTML = DECISOES_NOMES.map((nome,i)=>{
+    const escolhas = alunos.map(a=>a.decisoes[i]?.opcaoEscolhida).filter(Boolean);
+    const cA = escolhas.filter(x=>x==='A').length;
+    const cB = escolhas.filter(x=>x==='B').length;
+    const cC = escolhas.filter(x=>x==='C').length;
+    const tot = escolhas.length||1;
+    const pA=(cA/tot*100).toFixed(0), pB=(cB/tot*100).toFixed(0), pC=(cC/tot*100).toFixed(0);
+    // Identifica a decisão da área
+    const area = Object.keys(AREA_DEC).find(a=>AREA_DEC[a].includes(i))||'';
+    const badge = AREA_BADGE_MAP[area]||'b-infra';
+    return `<div class="dec-abc" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;margin-bottom:6px">
+      <div class="dec-label" style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span class="area-badge-sm ${badge}">${area}</span>
+        <span style="font-family:Syne,sans-serif;font-weight:600;font-size:12px">${i+1}. ${nome}</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--hint)">${tot} resposta${tot!==1?'s':''}</span>
+      </div>
+      <div class="abc-bars" style="height:22px">
+        <div class="abc-seg seg-a" style="width:${pA}%" title="Opção A: ${cA}">${pA>10?'A '+pA+'%':pA>5?pA+'%':''}</div>
+        <div class="abc-seg seg-b" style="width:${pB}%" title="Opção B: ${cB}">${pB>10?'B '+pB+'%':pB>5?pB+'%':''}</div>
+        <div class="abc-seg seg-c" style="width:${pC}%" title="Opção C: ${cC}">${pC>10?'C '+pC+'%':pC>5?pC+'%':''}</div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:4px">
+        <span style="font-size:10px;color:var(--hint)">A: ${cA} (${pA}%)</span>
+        <span style="font-size:10px;color:var(--hint)">B: ${cB} (${pB}%)</span>
+        <span style="font-size:10px;color:var(--hint)">C: ${cC} (${pC}%)</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MUNICÍPIOS
+function renderMunicipios(){
+  const munis = [...new Set(alunos.map(a=>a.municipio.nome))].sort();
+  const cmpEl = document.getElementById('muni-compare');
+  const tbEl = document.getElementById('tbody-municipios');
+
+  cmpEl.innerHTML = munis.map(m=>{
+    const grupo = alunos.filter(a=>a.municipio.nome===m);
+    const avg = (grupo.reduce((s,a)=>s+a.pontuacao.total,0)/grupo.length).toFixed(1);
+    const concs = grupo.map(a=>a.pontuacao.conceito);
+    return `<div class="muni-crd">
+      <div class="muni-crd-nome">${m}</div>
+      <div class="muni-crd-count">${grupo.length} aluno${grupo.length!==1?'s':''}</div>
+      <div class="muni-score-avg" style="color:${barColor(avg)}">${avg}</div>
+      <div class="area-bar-t" style="margin-bottom:6px"><div class="area-bar-f" style="width:${avg}%;background:${barColor(avg)}"></div></div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">${concs.map(c=>`<span class="badge-conc c-${c}">${c}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+
+  tbEl.innerHTML = munis.map(m=>{
+    const grupo = alunos.filter(a=>a.municipio.nome===m);
+    const pts = grupo.map(a=>a.pontuacao.total);
+    const avg = (pts.reduce((s,x)=>s+x,0)/pts.length).toFixed(1);
+    const melhor = grupo.reduce((b,a)=>a.pontuacao.total>b.pontuacao.total?a:b).pontuacao.conceito;
+    const pior = grupo.reduce((b,a)=>a.pontuacao.total<b.pontuacao.total?a:b).pontuacao.conceito;
+    const avgOrc = (grupo.reduce((s,a)=>s+a.pontuacao.pctOrcamento,0)/grupo.length).toFixed(0);
+    return `<tr>
+      <td><strong>${m}</strong></td>
+      <td>${grupo.length}</td>
+      <td><span class="score-cell" style="color:${barColor(avg)}">${avg}</span></td>
+      <td><span class="badge-conc c-${melhor}">${melhor}</span></td>
+      <td><span class="badge-conc c-${pior}">${pior}</span></td>
+      <td style="color:${avgOrc>50?'var(--red)':avgOrc>35?'var(--amber)':'var(--green)'};font-family:Syne,sans-serif;font-weight:700">${avgOrc}%</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── MODAL DETALHE
+function abrirModal(nome){
+  const a = alunos.find(x=>x.aluno.nome===nome);
+  if(!a) return;
+  document.getElementById('modal-titulo').textContent = a.aluno.nome;
+  const areas = ["Saúde","Educação","Turismo","Finanças","Infraestrutura","Logística"];
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-metrics">
+      <div class="m-met"><div class="m-met-val" style="color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</div><div class="m-met-lbl">Pontuação total</div></div>
+      <div class="m-met"><div class="m-met-val"><span class="badge-conc c-${a.pontuacao.conceito}">${a.pontuacao.conceito}</span></div><div class="m-met-lbl">Conceito</div></div>
+      <div class="m-met"><div class="m-met-val">${a.pontuacao.pctOrcamento}%</div><div class="m-met-lbl">Orçamento usado</div></div>
+      <div class="m-met"><div class="m-met-val">${a.pontuacao.eficMedia}</div><div class="m-met-lbl">Efic. média</div></div>
+      <div class="m-met"><div class="m-met-val">${a.municipio.nome}</div><div class="m-met-lbl">Município</div></div>
+      <div class="m-met"><div class="m-met-val">${a.aluno.turma||'—'}</div><div class="m-met-lbl">Turma</div></div>
+    </div>
+
+    <span class="sec-lbl">Indicadores por área</span>
+    <div style="margin-bottom:1.25rem">${areas.map(area=>`
+      <div class="area-row">
+        <span class="area-nome">${area}</span>
+        <div class="area-bar-t"><div class="area-bar-f" style="width:${a.indicadoresPorArea[area]}%;background:${barColor(a.indicadoresPorArea[area])}"></div></div>
+        <span class="area-val" style="color:${barColor(a.indicadoresPorArea[area])}">${a.indicadoresPorArea[area]}</span>
+      </div>`).join('')}
+    </div>
+
+    <span class="sec-lbl">As 20 decisões</span>
+    <div class="dec-list">${a.decisoes.map((d,i)=>{
+      const area = Object.keys(AREA_DEC).find(ar=>AREA_DEC[ar].includes(i))||'';
+      const badge = AREA_BADGE_MAP[area]||'b-infra';
+      const eficColor = d.eficiencia>=80?'var(--green)':d.eficiencia>=60?'var(--amber)':'var(--red)';
+      return `<div class="dec-li">
+        <div class="dec-li-n">${i+1}</div>
+        <div class="dec-li-info">
+          <div class="dec-li-titulo"><span class="area-badge-sm ${badge}">${d.opcaoEscolhida}</span>${d.titulo}</div>
+          <div class="dec-li-escolha">${d.tituloEscolha} · <span style="color:${eficColor}">Efic: ${d.eficiencia}/100</span> · R$ ${d.custo.toFixed(1)} mi/ano</div>
+        </div>
+      </div>`;
+    }).join('')}</div>
+  `;
+  document.getElementById('modal-aluno').classList.add('open');
+}
+
+function fecharModal(){
+  document.getElementById('modal-aluno').classList.remove('open');
+}
+document.getElementById('modal-aluno').addEventListener('click',function(e){
+  if(e.target===this) fecharModal();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') fecharModal(); });
+
+// ── TABS
+function showTab(id, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── EXPORT CSV
+function exportCSV(){
+  const areas = ["Saúde","Educação","Turismo","Finanças","Infraestrutura","Logística"];
+  const header = ['Nome','Turma','Município','Problema Central','Conceito','Pontuação','Orçamento Usado (%)','Efic. Média',...areas,...DECISOES_NOMES.map((_,i)=>`Dec ${i+1}`)].join(';');
+  const rows = alunos.map(a=>[
+    a.aluno.nome, a.aluno.turma||'',
+    a.municipio.nome, a.municipio.problema,
+    a.pontuacao.conceito, a.pontuacao.total,
+    a.pontuacao.pctOrcamento, a.pontuacao.eficMedia,
+    ...areas.map(ar=>a.indicadoresPorArea[ar]||0),
+    ...a.decisoes.map(d=>d.opcaoEscolhida)
+  ].join(';'));
+  const csv = [header,...rows].join('\n');
+  const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'resultados-turma.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+// ── LIMPAR
+function limparTudo(){
+  if(!confirm('Remover todos os resultados carregados?')) return;
+  alunos=[];
+  renderTudo();
+}
+
+// ── HELPERS
+function barColor(v){
+  v = parseFloat(v);
+  return v>=80?'#2D5016':v>=65?'#8B6914':'#7A1A1A';
+}
+</script>
+</body>
+</html>
