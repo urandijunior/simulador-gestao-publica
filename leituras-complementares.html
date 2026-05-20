@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leituras Complementares — Planejamento Estratégico e Gestão Pública</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F2EB;
+  --paper: #FDFBF7;
+  --ink: #1A1814;
+  --ink2: #4A4640;
+  --ink3: #8A8680;
+  --border: #DDD9CF;
+  --accent: #2D5016;
+  --accent-l: #EBF2E0;
+  --accent-m: #3D6E24;
+  --gold: #7A5A10;
+  --gold-l: #FDF5E0;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── CAPA ── */
+.capa {
+  background: var(--ink);
+  color: #F5F2EB;
+  padding: 3.5rem 2.5rem 3rem;
+  max-width: 760px;
+  margin: 0 auto 0;
+}
+.capa-tag {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  opacity: .45;
+  margin-bottom: 1.25rem;
+  display: block;
+}
+.capa h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+.capa-desc {
+  font-size: 14px;
+  opacity: .6;
+  line-height: 1.65;
+  max-width: 520px;
+  margin-bottom: 1.75rem;
+}
+.capa-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(255,255,255,.12);
+  padding-top: 1.25rem;
+}
+.capa-meta-item { font-size: 12px; opacity: .5; }
+.capa-meta-item strong { display: block; opacity: 1; font-size: 13px; margin-bottom: 2px; }
+
+/* ── AVISO PEDAGÓGICO ── */
+.aviso {
+  background: var(--gold-l);
+  border-left: 3px solid var(--gold);
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  font-size: 13px;
+  color: var(--gold);
+  line-height: 1.6;
+}
+
+/* ── SHELL ── */
+.shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+}
+
+/* ── ARTIGO ── */
+.artigo {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 2rem 0;
+}
+
+.artigo-hdr {
+  padding: 1.75rem 2rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.artigo-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent-m);
+  font-weight: 600;
+  margin-bottom: .625rem;
+  display: block;
+}
+.artigo-titulo {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: .875rem;
+  color: var(--ink);
+}
+.artigo-fonte {
+  background: var(--accent-l);
+  border-radius: 6px;
+  padding: .625rem .875rem;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.25rem;
+}
+.fonte-item { font-size: 11.5px; color: var(--accent); }
+.fonte-item strong { font-weight: 500; }
+
+/* ── CORPO DO ARTIGO ── */
+.artigo-body {
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.secao-titulo {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  font-weight: 600;
+  margin-bottom: .5rem;
+  display: block;
+  padding-bottom: .375rem;
+  border-bottom: 1px solid var(--border);
+}
+
+p { color: var(--ink2); line-height: 1.78; }
+
+/* Destaque / pull quote */
+.destaque {
+  border-left: 3px solid var(--accent-m);
+  padding: .875rem 1.25rem;
+  background: var(--accent-l);
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+  color: var(--accent);
+  line-height: 1.65;
+  font-style: italic;
+}
+.destaque cite {
+  display: block;
+  margin-top: .5rem;
+  font-size: 12px;
+  font-style: normal;
+  opacity: .75;
+}
+
+/* Tabela conceitos */
+.conceitos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+.conceito-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .875rem 1rem;
+  background: var(--paper);
+}
+.conceito-titulo {
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: .375rem;
+}
+.conceito-desc { font-size: 12px; color: var(--ink3); line-height: 1.55; }
+
+/* Lista estruturada */
+.lista-estruturada {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lista-item {
+  display: flex;
+  gap: .875rem;
+  align-items: flex-start;
+  background: var(--bg);
+  border-radius: 7px;
+  padding: .625rem .875rem;
+}
+.lista-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent-m);
+  width: 18px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+.lista-txt { font-size: 13.5px; color: var(--ink2); line-height: 1.6; flex: 1; }
+.lista-txt strong { color: var(--ink); font-weight: 500; }
+
+/* Implicações */
+.implicacoes {
+  background: var(--ink);
+  color: #F5F2EB;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+}
+.impl-titulo {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  opacity: .45;
+  margin-bottom: .875rem;
+}
+.impl-item {
+  display: flex;
+  gap: .75rem;
+  margin-bottom: .625rem;
+  font-size: 13.5px;
+  opacity: .85;
+  line-height: 1.6;
+}
+.impl-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-m);
+  flex-shrink: 0;
+  margin-top: 7px;
+}
+
+/* Rodapé do artigo */
+.artigo-footer {
+  padding: 1rem 2rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+.ref-completa { font-size: 11px; color: var(--ink3); line-height: 1.55; flex: 1; min-width: 200px; }
+.ref-completa strong { color: var(--ink2); }
+.doi-link {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  color: var(--ink2);
+  text-decoration: none;
+  white-space: nowrap;
+  background: var(--paper);
+}
+.doi-link:hover { background: var(--border); }
+
+/* ── GUIA DE ESTUDO ── */
+.guia {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.75rem 2rem;
+  margin: 2rem 0;
+}
+.guia h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 1.25rem;
+}
+.guia-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.guia-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .875rem 1rem;
+}
+.guia-q {
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: .375rem;
+  line-height: 1.4;
+}
+.guia-dica { font-size: 11.5px; color: var(--ink3); line-height: 1.55; }
+
+@media print {
+  .capa { color: #000; background: #fff; }
+  .aviso { display: none; }
+  .artigo { break-inside: avoid; }
+}
+@media (max-width: 540px) {
+  .artigo-hdr, .artigo-body, .artigo-footer { padding: 1.25rem; }
+  .capa { padding: 2rem 1.25rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="capa">
+  <span class="capa-tag">Simulador de Gestão Pública · Material de Apoio</span>
+  <h1>Leituras complementares para o exercício</h1>
+  <p class="capa-desc">Dois artigos resumidos de publicações acadêmicas reconhecidas. Leia antes de iniciar as decisões — o conteúdo fundamenta diretamente as escolhas que você irá fazer.</p>
+  <div class="capa-meta">
+    <div class="capa-meta-item"><strong>Disciplinas</strong> Planejamento Estratégico · Gestão Pública</div>
+    <div class="capa-meta-item"><strong>Fontes</strong> Public Management Review · RAP-FGV · Cogitare</div>
+    <div class="capa-meta-item"><strong>Período</strong> 2022–2024</div>
+    <div class="capa-meta-item"><strong>Leitura estimada</strong> 25–35 minutos</div>
+  </div>
+</div>
+
+<div class="aviso">
+  <strong>Nota ao aluno:</strong> estes são resumos didáticos elaborados com base nos artigos originais. As ideias centrais, os autores e as referências são reais; a linguagem foi adaptada para facilitar a leitura. As referências completas e os DOIs para acesso aos textos originais constam no rodapé de cada artigo.
+</div>
+
+<div class="shell">
+
+<!-- ══════════════════════════════════════════════════════
+     ARTIGO 1
+═══════════════════════════════════════════════════════ -->
+<div class="artigo">
+  <div class="artigo-hdr">
+    <span class="artigo-num">Artigo 1 de 2 · Planejamento Estratégico no Setor Público</span>
+    <h2 class="artigo-titulo">Formação de objetivos no planejamento estratégico público: por que as metas das organizações governamentais importam — e por que é tão difícil defini-las bem</h2>
+    <div class="artigo-fonte">
+      <span class="fonte-item"><strong>Autores</strong> John M. Bryson, Bert George e Danbi Seo</span>
+      <span class="fonte-item"><strong>Publicação</strong> Public Management Review</span>
+      <span class="fonte-item"><strong>Ano</strong> 2024 (publicado online em 2022)</span>
+      <span class="fonte-item"><strong>Volume</strong> v. 26, n. 2, p. 539–564</span>
+      <span class="fonte-item"><strong>Classificação</strong> Q1 Scopus · Web of Science</span>
+    </div>
+  </div>
+
+  <div class="artigo-body">
+
+    <div>
+      <span class="secao-titulo">Contexto e relevância</span>
+      <p>Um dos problemas mais persistentes na gestão pública é a dificuldade de definir o que se quer alcançar antes de decidir como agir. Organizações privadas têm objetivos relativamente claros — maximizar resultados financeiros, crescer participação de mercado. Organizações públicas, por outro lado, servem simultaneamente a interesses conflitantes, respondem a múltiplos mandantes políticos e operam sob legislação que frequentemente determina o que fazer, mas não como. Essa ambiguidade de objetivos não é um defeito do setor público — é uma característica estrutural com consequências diretas sobre como os gestores devem planejar e tomar decisões.</p>
+      <p>John Bryson, um dos maiores especialistas mundiais em planejamento estratégico para organizações públicas e sem fins lucrativos, reuniu-se com Bert George — ex-editor da principal revista da área, a <em>Public Administration Review</em> — e Danbi Seo para propor o primeiro framework teórico multinível sobre <strong>como os objetivos organizacionais se formam</strong> no setor público ao longo do tempo.</p>
+    </div>
+
+    <div class="destaque">
+      "Os objetivos organizacionais estão no centro do planejamento estratégico público. Embora a pesquisa se concentre no impacto das metas sobre o desempenho, o campo permanece incerto sobre de onde vêm esses objetivos e como eles se formam ao longo do tempo."
+      <cite>— Bryson, George e Seo, Public Management Review, 2024</cite>
+    </div>
+
+    <div>
+      <span class="secao-titulo">O problema central: objetivos não nascem prontos</span>
+      <p>A visão simplificada do planejamento estratégico supõe que o gestor parte de objetivos claros e define ações para alcançá-los. A pesquisa de Bryson, George e Seo mostra que isso raramente acontece assim. Os objetivos das organizações públicas emergem de um processo complexo, influenciado por forças em três níveis simultâneos:</p>
+    </div>
+
+    <div class="conceitos-grid">
+      <div class="conceito-card">
+        <div class="conceito-titulo">Nível institucional</div>
+        <div class="conceito-desc">Leis, normas constitucionais, políticas federais e estaduais que delimitam o que o gestor pode e deve fazer — independentemente de sua vontade.</div>
+      </div>
+      <div class="conceito-card">
+        <div class="conceito-titulo">Nível organizacional</div>
+        <div class="conceito-desc">A estrutura interna, a cultura da secretaria, o histórico de decisões anteriores e as capacidades reais da equipe disponível.</div>
+      </div>
+      <div class="conceito-card">
+        <div class="conceito-titulo">Nível individual</div>
+        <div class="conceito-desc">Os valores, a visão e as preferências dos gestores e líderes que efetivamente tomam as decisões cotidianas.</div>
+      </div>
+    </div>
+
+    <div>
+      <p>A contribuição central do artigo é demonstrar que ignorar qualquer um desses três níveis gera planos estratégicos que não saem do papel — seja porque contradizem as normas vigentes, seja porque dependem de capacidades que a organização não possui, seja porque nenhum gestor na ponta sente comprometimento real com eles.</p>
+    </div>
+
+    <div>
+      <span class="secao-titulo">Processos de formação de objetivos: como acontece na prática</span>
+      <p>Os autores identificam quatro processos distintos pelos quais objetivos se formam em organizações públicas. Cada um tem implicações diferentes para o planejamento municipal:</p>
+    </div>
+
+    <div class="lista-estruturada">
+      <div class="lista-item">
+        <span class="lista-num">01</span>
+        <div class="lista-txt"><strong>Formulação deliberada:</strong> o gestor e sua equipe definem objetivos conscientemente em resposta a um diagnóstico. É o processo mais racional — e o mais raro em municípios com baixa capacidade técnica. Requer tempo, dados e engajamento político.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">02</span>
+        <div class="lista-txt"><strong>Emergência incremental:</strong> objetivos se cristalizam à medida que decisões cotidianas se acumulam. É o que acontece na maioria dos municípios brasileiros — as prioridades não são declaradas, elas se revelam no padrão de gasto e nas alocações orçamentárias ao longo do tempo.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">03</span>
+        <div class="lista-txt"><strong>Imposição externa:</strong> objetivos são determinados por atores externos — Ministérios, Tribunais de Contas, credores ou a opinião pública mobilizada. O gestor não escolhe o objetivo; escolhe como respondê-lo.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">04</span>
+        <div class="lista-txt"><strong>Negociação política:</strong> objetivos emergem de acordos entre coalizões de interesse dentro e fora da organização. Câmara Municipal, secretários, sindicatos e grupos comunitários moldam o que o executivo municipal efetivamente persegue.</div>
+      </div>
+    </div>
+
+    <div>
+      <span class="secao-titulo">O papel do tempo: objetivos mudam — e isso é esperado</span>
+      <p>Um dos achados mais importantes do artigo é a dimensão temporal: os autores mostram que objetivos organizacionais não são estáticos. Eles se reformulam ao longo de um mandato em resposta a crises, à troca de lideranças, a resultados inesperados e a mudanças no ambiente político. Isso não é sinal de má gestão — é o funcionamento normal do setor público. O problema ocorre quando os gestores não reconhecem essa dinâmica e tratam o plano original como imutável, perdendo a capacidade de adaptação estratégica.</p>
+      <p>Para o contexto deste exercício: cada uma das 20 decisões que você tomará representa um momento em que um objetivo é reafirmado, ajustado ou substituído por outro. A consistência entre as escolhas — e sua coerência com o diagnóstico do município — é o que distingue uma gestão estratégica de uma gestão reativa.</p>
+    </div>
+
+    <div class="implicacoes">
+      <div class="impl-titulo">Implicações diretas para o exercício</div>
+      <div class="impl-item"><div class="impl-dot"></div>Antes de escolher uma opção, identifique: essa decisão responde a qual nível — institucional, organizacional ou individual? As três dimensões estão alinhadas?</div>
+      <div class="impl-item"><div class="impl-dot"></div>Verifique se o objetivo da decisão é explícito ou emergente. Decisões de curto prazo que parecem neutras acumulam-se e revelam uma estratégia implícita — que pode ou não ser desejável.</div>
+      <div class="impl-item"><div class="impl-dot"></div>Em municípios com crise fiscal (como Córrego Fundo do Vale), os objetivos são majoritariamente impostos externamente. O planejamento estratégico nesses contextos é mais sobre escolher o que não fazer do que sobre expandir.</div>
+      <div class="impl-item"><div class="impl-dot"></div>A sequência das decisões importa: decisões de curto prazo condicionam as de médio e longo prazo, especialmente quando há restrição orçamentária.</div>
+    </div>
+
+  </div>
+
+  <div class="artigo-footer">
+    <div class="ref-completa">
+      <strong>Referência completa:</strong> BRYSON, J. M.; GEORGE, B.; SEO, D. Understanding goal formation in strategic public management: a proposed theoretical framework. <em>Public Management Review</em>, v. 26, n. 2, p. 539–564, 2024. DOI: 10.1080/14719037.2022.2103173.
+    </div>
+    <a class="doi-link" href="https://doi.org/10.1080/14719037.2022.2103173" target="_blank">Acessar artigo original ↗</a>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     ARTIGO 2
+═══════════════════════════════════════════════════════ -->
+<div class="artigo">
+  <div class="artigo-hdr">
+    <span class="artigo-num">Artigo 2 de 2 · Gestão de Desempenho em Governos Locais</span>
+    <h2 class="artigo-titulo">Avançando na governança local: o que três décadas de pesquisa sobre sistemas de gestão de desempenho em governos municipais revelam — e o que ainda está em aberto</h2>
+    <div class="artigo-fonte">
+      <span class="fonte-item"><strong>Autores</strong> Revisão sistemática de 122 estudos (2000–2023) — múltiplos autores</span>
+      <span class="fonte-item"><strong>Publicação</strong> Cogent Business &amp; Management (Taylor &amp; Francis)</span>
+      <span class="fonte-item"><strong>Ano</strong> 2024 (publicado em dezembro)</span>
+      <span class="fonte-item"><strong>Indexação</strong> Scopus · DOAJ · Open Access</span>
+    </div>
+  </div>
+
+  <div class="artigo-body">
+
+    <div>
+      <span class="secao-titulo">Contexto e relevância</span>
+      <p>Durante as décadas de 1990 e 2000, a chamada <em>Nova Gestão Pública</em> (NGP) disseminou pelo mundo a ideia de que governos deveriam ser geridos como empresas — com metas claras, indicadores de desempenho, avaliação por resultados e responsabilização dos gestores. Três décadas depois, o que sabemos sobre se isso funcionou? Uma revisão sistemática da literatura publicada em 2024 na <em>Cogent Business &amp; Management</em> — periódico da Taylor &amp; Francis, um dos maiores grupos editoriais acadêmicos do mundo — analisou 122 estudos sobre sistemas de gestão de desempenho em governos locais publicados entre 2000 e 2023, para responder exatamente a essa pergunta.</p>
+      <p>Os achados são fundamentais para quem vai tomar decisões de gestão pública: eles mostram o que funciona, o que falha e, principalmente, por que tantas reformas bem-intencionadas produzem resultados medíocres.</p>
+    </div>
+
+    <div class="destaque">
+      "A demanda por excelência operacional na administração pública é impulsionada pelo desafio dos gestores de melhorar a qualidade dos serviços com recursos limitados. Governos locais adotaram estratégias variadas — mas os resultados dependem fortemente da capacidade institucional, da cultura organizacional e do contexto político local."
+      <cite>— Revisão sistemática, Cogent Business &amp; Management, 2024</cite>
+    </div>
+
+    <div>
+      <span class="secao-titulo">O que é um sistema de gestão de desempenho — e por que ele importa para municípios</span>
+      <p>Um sistema de gestão de desempenho (SGD) é o conjunto de práticas que permite a uma organização pública <strong>definir objetivos, medir resultados, usar essas informações para tomar decisões e prestar contas</strong> à sociedade. No nível municipal, isso abrange desde um simples painel de indicadores até sistemas integrados que conectam orçamento, execução de políticas e avaliação de impacto.</p>
+      <p>A revisão identificou quatro funções centrais que um SGD bem implementado deve cumprir:</p>
+    </div>
+
+    <div class="conceitos-grid">
+      <div class="conceito-card">
+        <div class="conceito-titulo">Aprendizagem organizacional</div>
+        <div class="conceito-desc">Usar dados de desempenho para entender o que funciona, ajustar estratégias e melhorar continuamente — não apenas para reportar.</div>
+      </div>
+      <div class="conceito-card">
+        <div class="conceito-titulo">Accountability</div>
+        <div class="conceito-desc">Criar transparência sobre o uso de recursos públicos e os resultados alcançados, fortalecendo a confiança da população.</div>
+      </div>
+      <div class="conceito-card">
+        <div class="conceito-titulo">Alocação de recursos</div>
+        <div class="conceito-desc">Informar decisões orçamentárias com evidências sobre o custo-efetividade de programas e políticas concorrentes.</div>
+      </div>
+      <div class="conceito-card">
+        <div class="conceito-titulo">Motivação e cultura</div>
+        <div class="conceito-desc">Criar incentivos para que servidores busquem resultados — e não apenas cumprir procedimentos formais.</div>
+      </div>
+    </div>
+
+    <div>
+      <span class="secao-titulo">O que três décadas de pesquisa revelam: o que funciona</span>
+      <p>A revisão identificou evidências consistentes sobre os fatores que diferenciam municípios que melhoram efetivamente seus serviços daqueles que ficam presos em reformas superficiais:</p>
+    </div>
+
+    <div class="lista-estruturada">
+      <div class="lista-item">
+        <span class="lista-num">01</span>
+        <div class="lista-txt"><strong>Qualidade do quadro de pessoal:</strong> de todos os fatores analisados, a qualificação e a estabilidade dos servidores é o que mais consistentemente aparece associado a bom desempenho municipal. Municípios que investem em formação continuada e carreiras estruturadas obtêm resultados superiores em quase todas as áreas — saúde, educação e infraestrutura. Isso explica por que decisões sobre pessoal têm impacto transversal.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">02</span>
+        <div class="lista-txt"><strong>Planejamento integrado ao orçamento:</strong> municípios que conectam seu plano estratégico às decisões de alocação orçamentária conseguem implementar políticas com maior efetividade. Onde o planejamento e o orçamento são processos separados — como ocorre em muitos municípios brasileiros — os objetivos estratégicos raramente se traduzem em resultados concretos.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">03</span>
+        <div class="lista-txt"><strong>Uso efetivo dos dados — não apenas coleta:</strong> a maioria dos municípios que adotou sistemas de indicadores os usa para reportar, não para decidir. A pesquisa mostra que o diferencial está na capacidade de usar os dados para reformular estratégias quando os resultados ficam abaixo do esperado.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">04</span>
+        <div class="lista-txt"><strong>Sustentabilidade financeira como pré-condição:</strong> em contextos de desequilíbrio fiscal grave, sistemas de gestão de desempenho têm impacto muito limitado — porque sem recursos para agir sobre os problemas identificados, a informação produz frustração, não melhoria. O equilíbrio fiscal não é apenas uma meta em si: é condição para que qualquer outra política funcione.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">05</span>
+        <div class="lista-txt"><strong>Engajamento cidadão:</strong> municípios que incorporam participação da população no monitoramento de serviços — seja por canais digitais, conselhos ou audiências públicas — apresentam maior pressão por melhoria contínua e menor corrupção em contratos públicos.</div>
+      </div>
+    </div>
+
+    <div>
+      <span class="secao-titulo">O que falha: as armadilhas mais comuns</span>
+      <p>A revisão também documentou padrões recorrentes de falha em reformas de gestão de desempenho municipal no mundo — e vários deles têm correspondência direta no Brasil:</p>
+    </div>
+
+    <div class="lista-estruturada">
+      <div class="lista-item">
+        <span class="lista-num">✗</span>
+        <div class="lista-txt"><strong>Isomorfismo mimético:</strong> municípios adotam práticas de gestão que funcionaram em outros contextos sem adaptar ao seu próprio ambiente institucional. Sistemas de indicadores desenvolvidos para cidades de grande porte falham quando aplicados a municípios de 25-35 mil habitantes com baixa capacidade técnica.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">✗</span>
+        <div class="lista-txt"><strong>Foco em compliance, não em desempenho:</strong> gestores atendem formalmente às exigências legais de prestação de contas sem usar as informações produzidas para melhorar serviços. O relatório existe; a aprendizagem não acontece.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">✗</span>
+        <div class="lista-txt"><strong>Discontinuidade política:</strong> sistemas construídos por uma gestão são abandonados pela seguinte, por razões políticas ou simplesmente por desconhecimento. A descontinuidade é o maior inimigo da gestão baseada em evidências no setor público.</div>
+      </div>
+      <div class="lista-item">
+        <span class="lista-num">✗</span>
+        <div class="lista-txt"><strong>Visão setorial isolada:</strong> secretarias gerenciam seus indicadores de forma independente, sem integração. Problemas que exigem resposta intersetorial — como a relação entre saneamento, saúde e educação — ficam sem resposta porque nenhuma secretaria tem autoridade e incentivo para coordenar.</div>
+      </div>
+    </div>
+
+    <div>
+      <span class="secao-titulo">O caso brasileiro e o contexto latino-americano</span>
+      <p>A revisão observa uma lacuna específica: há muito menos pesquisa sobre gestão de desempenho municipal na América do Sul do que em outras regiões, e os estudos existentes sobre o Brasil mostram que os sistemas de gestão municipal estão ainda em fase de amadurecimento. As principais barreiras identificadas são a capacidade técnica reduzida (especialmente em municípios de pequeno e médio porte), a alta rotatividade de lideranças por ciclos eleitorais e a fragmentação dos sistemas de informação entre diferentes esferas de governo.</p>
+      <p>Isso não é uma condenação — é um diagnóstico de oportunidade. Municípios que conseguem superar essas barreiras, mesmo que parcialmente, obtêm vantagens comparativas significativas na captação de recursos federais, na eficiência da prestação de serviços e na confiança da população.</p>
+    </div>
+
+    <div class="implicacoes">
+      <div class="impl-titulo">Implicações diretas para o exercício</div>
+      <div class="impl-item"><div class="impl-dot"></div>Quando você decidir sobre gestão de pessoal (decisão 7), lembre que essa é, segundo a evidência internacional, a variável de maior impacto transversal no desempenho municipal.</div>
+      <div class="impl-item"><div class="impl-dot"></div>Decisões de captação de recursos (decisão 8) não são apenas financeiras — elas determinam a capacidade técnica futura do município de planejar e executar políticas.</div>
+      <div class="impl-item"><div class="impl-dot"></div>Em municípios com crise fiscal grave, a literatura é clara: nenhuma política setorial — saúde, educação, infraestrutura — produz resultado sustentável sem equilíbrio financeiro. Priorize as decisões fiscais antes das setoriais.</div>
+      <div class="impl-item"><div class="impl-dot"></div>A decisão sobre governo digital (decisão 20) não é apenas sobre tecnologia — é sobre criar a infraestrutura de dados e processos que permitirá que todas as outras políticas sejam monitoradas e ajustadas ao longo do mandato.</div>
+      <div class="impl-item"><div class="impl-dot"></div>Evite a armadilha do isomorfismo: o que funcionou em São Paulo ou em cidades europeias pode não funcionar em um município de 28 mil habitantes no Maranhão. Considere sempre o contexto institucional local.</div>
+    </div>
+
+  </div>
+
+  <div class="artigo-footer">
+    <div class="ref-completa">
+      <strong>Referência completa:</strong> ADVANCING local governance: a systematic review of performance management systems. <em>Cogent Business &amp; Management</em>, v. 11, n. 1, artigo 2442545, dez. 2024. DOI: 10.1080/23311975.2024.2442545. Acesso aberto.
+    </div>
+    <a class="doi-link" href="https://doi.org/10.1080/23311975.2024.2442545" target="_blank">Acessar artigo original ↗</a>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     GUIA DE ESTUDO
+═══════════════════════════════════════════════════════ -->
+<div class="guia">
+  <h2>Guia de estudo — perguntas para reflexão antes do exercício</h2>
+  <div class="guia-grid">
+    <div class="guia-item">
+      <div class="guia-q">Como os objetivos do seu município foram formados?</div>
+      <div class="guia-dica">Leia o briefing da cidade escolhida e identifique se o problema central emergiu de forma deliberada, incremental ou foi imposto externamente. Isso muda a estratégia.</div>
+    </div>
+    <div class="guia-item">
+      <div class="guia-q">Qual é a capacidade institucional real do município?</div>
+      <div class="guia-dica">Analise os dados de orçamento, IDHM e perfil dos servidores. Uma decisão correta em tese pode ser impraticável se a prefeitura não tem equipe para executá-la.</div>
+    </div>
+    <div class="guia-item">
+      <div class="guia-q">Suas decisões são coerentes entre si?</div>
+      <div class="guia-dica">O artigo 1 mostra que objetivos fragmentados produzem planos que não saem do papel. Verifique se as suas 20 decisões apontam para uma direção consistente.</div>
+    </div>
+    <div class="guia-item">
+      <div class="guia-q">Você está priorizando os fatores de maior impacto?</div>
+      <div class="guia-dica">O artigo 2 mostra que pessoal qualificado e equilíbrio fiscal têm impacto transversal superior ao de políticas setoriais isoladas. Isso está refletido nas suas escolhas?</div>
+    </div>
+    <div class="guia-item">
+      <div class="guia-q">Como você justificaria cada escolha a um vereador opositor?</div>
+      <div class="guia-dica">O fundamento técnico de cada opção foi construído para resistir ao escrutínio político. Pratique articular a evidência por trás de cada decisão em linguagem não técnica.</div>
+    </div>
+    <div class="guia-item">
+      <div class="guia-q">Qual será o legado fiscal do seu mandato?</div>
+      <div class="guia-dica">O artigo 2 enfatiza que a descontinuidade é o maior inimigo da boa gestão. Suas decisões criam estruturas sustentáveis para o próximo gestor, ou dependem inteiramente de sua continuidade?</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /shell -->
+
+</body>
+</html>
