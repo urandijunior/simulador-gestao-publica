@@ -269,6 +269,14 @@ td{padding:.6rem .875rem;vertical-align:middle}
           <option value="orcamento-asc">Ordenar: Menor gasto %</option>
           <option value="orcamento-desc">Ordenar: Maior gasto %</option>
         </select>
+        <select class="filtro-select" id="filtro-ano" onchange="renderTabelaAlunos()">
+          <option value="">Todos os registros</option>
+          <option value="final">Só resultado final</option>
+          <option value="1">Só Ano 1</option>
+          <option value="2">Só Ano 2</option>
+          <option value="3">Só Ano 3</option>
+          <option value="4">Só Ano 4</option>
+        </select>
       </div>
       <div class="tbl-wrap">
         <table>
@@ -278,6 +286,7 @@ td{padding:.6rem .875rem;vertical-align:middle}
               <th>Vice</th>
               <th>Município</th>
               <th>Ano</th>
+              <th>Tipo</th>
               <th>Conceito</th>
               <th>Pontuação</th>
               <th>Orçamento usado</th>
@@ -422,10 +431,24 @@ async function sincronizarBanco(){
       _ano_mandato: r.ano_mandato||null
     }));
 
-    // Merge: não duplicar pelo nome
+    // Merge correto:
+    // - Registros com ano_mandato (1-4): guardar TODOS, identificar por nome+ano
+    // - Registros sem ano_mandato (null): resultado final, 1 por nome
     novos.forEach(novo => {
-      const idx = alunos.findIndex(a => a.aluno.nome === novo.aluno.nome);
-      if(idx >= 0) alunos[idx] = novo; else alunos.push(novo);
+      const ehAnual = novo._ano_mandato !== null;
+      if(ehAnual){
+        // Anual: deduplica por nome+ano (substitui se já existir esse ano)
+        const idx = alunos.findIndex(a =>
+          a.aluno.nome === novo.aluno.nome && a._ano_mandato === novo._ano_mandato
+        );
+        if(idx >= 0) alunos[idx] = novo; else alunos.push(novo);
+      } else {
+        // Final (null): deduplica só pelo nome
+        const idx = alunos.findIndex(a =>
+          a.aluno.nome === novo.aluno.nome && a._ano_mandato === null
+        );
+        if(idx >= 0) alunos[idx] = novo; else alunos.push(novo);
+      }
     });
 
     icon.style.animation = '';
@@ -508,8 +531,16 @@ async function processFiles(files){
 
 // ══ RENDER ════════════════════════════════════════════════════════════════
 function renderRanking(){
-  // Pegar apenas registros com ano_mandato=null (resultado final) ou todos se não há distinção
-  const todosFinal = [...alunos].sort((a,b)=>b.pontuacao.total-a.pontuacao.total);
+  // Ranking geral: finais + mais recente por nome de quem não tem final
+  const finais = alunos.filter(a=>a._ano_mandato===null);
+  const anuais = alunos.filter(a=>a._ano_mandato!==null);
+  const nomesComFinal = new Set(finais.map(a=>a.aluno.nome));
+  const maiorAnoPorNome = {};
+  anuais.filter(a=>!nomesComFinal.has(a.aluno.nome)).forEach(a=>{
+    if(!maiorAnoPorNome[a.aluno.nome]||a._ano_mandato>maiorAnoPorNome[a.aluno.nome]._ano_mandato)
+      maiorAnoPorNome[a.aluno.nome]=a;
+  });
+  const todosFinal = [...finais,...Object.values(maiorAnoPorNome)].sort((a,b)=>b.pontuacao.total-a.pontuacao.total);
   const medalhas = ['🥇','🥈','🥉'];
 
   // Ranking geral
@@ -577,13 +608,24 @@ function populaFiltroMuni(){
 
 // ── MÉTRICAS GERAIS
 function renderMetricas(){
-  const pts = alunos.map(a=>a.pontuacao.total);
+  // Métricas: usar só registros finais ou mais recente por nome
+  const finais = alunos.filter(a=>a._ano_mandato===null);
+  const anuais = alunos.filter(a=>a._ano_mandato!==null);
+  const nomesComFinal = new Set(finais.map(a=>a.aluno.nome));
+  const maiorAnoPorNome = {};
+  anuais.filter(a=>!nomesComFinal.has(a.aluno.nome)).forEach(a=>{
+    if(!maiorAnoPorNome[a.aluno.nome]||a._ano_mandato>maiorAnoPorNome[a.aluno.nome]._ano_mandato)
+      maiorAnoPorNome[a.aluno.nome]=a;
+  });
+  const base = [...finais,...Object.values(maiorAnoPorNome)];
+  const pts = base.map(a=>a.pontuacao.total);
+  if(!pts.length){ document.getElementById('metrics-gerais').innerHTML='<div style="color:var(--muted);font-size:13px;padding:.5rem">Nenhum resultado ainda.</div>'; return; }
   const avg = pts.reduce((s,x)=>s+x,0)/pts.length;
   const max = Math.max(...pts); const min = Math.min(...pts);
   const concs = {A:0,B:0,C:0,D:0,F:0};
-  alunos.forEach(a=>concs[a.pontuacao.conceito]=(concs[a.pontuacao.conceito]||0)+1);
-  const melhor = alunos.reduce((b,a)=>a.pontuacao.total>b.pontuacao.total?a:b);
-  const avgOrc = alunos.reduce((s,a)=>s+a.pontuacao.pctOrcamento,0)/alunos.length;
+  base.forEach(a=>concs[a.pontuacao.conceito]=(concs[a.pontuacao.conceito]||0)+1);
+  const melhor = base.reduce((b,a)=>a.pontuacao.total>b.pontuacao.total?a:b);
+  const avgOrc = base.reduce((s,a)=>s+a.pontuacao.pctOrcamento,0)/base.length;
 
   document.getElementById('metrics-gerais').innerHTML = `
     <div class="metric"><div class="metric-lbl">Total de alunos</div><div class="metric-val">${alunos.length}</div><div class="metric-sub">arquivos carregados</div></div>
@@ -601,11 +643,34 @@ function renderTabelaAlunos(){
   const filtMuni = document.getElementById('filtro-muni').value;
   const filtConc = document.getElementById('filtro-conc').value;
   const sortKey  = document.getElementById('filtro-sort').value;
+  const filtAno  = document.getElementById('filtro-ano') ? document.getElementById('filtro-ano').value : '';
 
-  let lista = alunos.filter(a=>{
+  // Separar finais e anuais
+  const finais = alunos.filter(a => a._ano_mandato === null);
+  const anuais = alunos.filter(a => a._ano_mandato !== null);
+
+  // Para a tabela: mostrar finais + anuais de quem ainda não tem final
+  const nomesComFinal = new Set(finais.map(a => a.aluno.nome));
+  const anuaisSemFinal = anuais.filter(a => !nomesComFinal.has(a.aluno.nome));
+  // Para anuaisSemFinal, pegar só o mais recente por nome
+  const maiorAnoPorNome = {};
+  anuaisSemFinal.forEach(a => {
+    if(!maiorAnoPorNome[a.aluno.nome] || a._ano_mandato > maiorAnoPorNome[a.aluno.nome]._ano_mandato)
+      maiorAnoPorNome[a.aluno.nome] = a;
+  });
+  const baseTabela = [...finais, ...Object.values(maiorAnoPorNome)];
+
+  // Se filtro de ano selecionado, usar todos os registros (não só base)
+  const fonteParaFiltro = filtAno && filtAno !== 'final' ? alunos :
+                          filtAno === 'final' ? alunos.filter(a=>a._ano_mandato===null) :
+                          baseTabela;
+
+  let lista = fonteParaFiltro.filter(a=>{
     if(filtNome && !a.aluno.nome.toLowerCase().includes(filtNome)) return false;
     if(filtMuni && a.municipio.nome !== filtMuni) return false;
     if(filtConc && a.pontuacao.conceito !== filtConc) return false;
+    if(filtAno === 'final' && a._ano_mandato !== null) return false;
+    if(filtAno && filtAno !== 'final' && String(a._ano_mandato) !== filtAno) return false;
     return true;
   });
 
@@ -638,6 +703,7 @@ function renderTabelaAlunos(){
       <td style="font-family:Syne,sans-serif;font-size:12px">${a.pontuacao.eficMedia}</td>
       <td style="font-size:11px;color:var(--hint)">${a.aluno.turma||'—'}</td>
       <td style="font-size:11px;color:var(--hint)">${a._created_at ? new Date(a._created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+      <td><span style="font-size:10px;font-family:Syne,sans-serif;font-weight:700;padding:2px 7px;border-radius:4px;background:${a._ano_mandato?'var(--blue-l,#EBF0FA)':'var(--green-l,#EBF2E2)'};color:${a._ano_mandato?'var(--blue,#1A3A6B)':'var(--green,#2D5016)'}">${a._ano_mandato?'Ano '+a._ano_mandato:'Final'}</span></td>
       <td><button class="btn-sm" onclick="abrirModal('${a.aluno.nome.replace(/'/g,"\\'")}')">Ver</button></td>
     </tr>`;
   }).join('') : `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint)">Nenhum aluno encontrado com esses filtros.</td></tr>`;
