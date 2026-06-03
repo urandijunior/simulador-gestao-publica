@@ -244,6 +244,7 @@ td{padding:.6rem .875rem;vertical-align:middle}
       <button class="tab" onclick="showTab('tab-areas',this)">Indicadores por área</button>
       <button class="tab" onclick="showTab('tab-decisoes',this)">Análise de decisões</button>
       <button class="tab" onclick="showTab('tab-municipios',this)">Por município</button>
+      <button class="tab" onclick="showTab('tab-ranking',this)">🏆 Ranking</button>
     </div>
 
     <!-- ══ TAB: ALUNOS ══ -->
@@ -273,8 +274,10 @@ td{padding:.6rem .875rem;vertical-align:middle}
         <table>
           <thead>
             <tr>
-              <th>Aluno</th>
+              <th>Prefeito(a)</th>
+              <th>Vice</th>
               <th>Município</th>
+              <th>Ano</th>
               <th>Conceito</th>
               <th>Pontuação</th>
               <th>Orçamento usado</th>
@@ -326,6 +329,33 @@ td{padding:.6rem .875rem;vertical-align:middle}
           <tbody id="tbody-municipios"></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- ══ TAB: RANKING ══ -->
+    <div id="tab-ranking" class="panel">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Classificação em ordem decrescente. Atualiza automaticamente ao carregar novos dados do banco.</p>
+
+      <span class="sec-lbl">Ranking geral — mandato completo</span>
+      <div class="tbl-wrap" style="margin-bottom:1.5rem">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Prefeito(a)</th>
+              <th>Vice-prefeito(a)</th>
+              <th>Município</th>
+              <th>Conceito</th>
+              <th>Pontuação</th>
+              <th>Orçamento usado</th>
+              <th>Efic. média</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-ranking-geral"></tbody>
+        </table>
+      </div>
+
+      <span class="sec-lbl">Ranking por ano de mandato</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px" id="ranking-anos"></div>
     </div>
 
   </div><!-- /main-content -->
@@ -381,13 +411,15 @@ async function sincronizarBanco(){
 
     // Converter formato Supabase → formato interno
     const novos = rows.map(r => ({
-      aluno: { nome: r.nome_aluno, turma: r.turma || '' },
+      aluno: { nome: r.nome_aluno, turma: r.turma || '', vice: r.vice_prefeito||'' },
       municipio: { nome: r.municipio, estado: r.municipio_estado||'', problema: r.municipio_problema||'' },
       pontuacao: { total: r.pontuacao, conceito: r.conceito, label: '', eficMedia: r.efic_media, pctOrcamento: r.pct_orcamento, totalComprometido: r.total_comprometido },
       indicadoresPorArea: r.indicadores || {},
       decisoes: r.decisoes || [],
       _id: r.id,
-      _created_at: r.created_at
+      _created_at: r.created_at,
+      _vice: r.vice_prefeito||'',
+      _ano_mandato: r.ano_mandato||null
     }));
 
     // Merge: não duplicar pelo nome
@@ -475,6 +507,51 @@ async function processFiles(files){
 }
 
 // ══ RENDER ════════════════════════════════════════════════════════════════
+function renderRanking(){
+  // Pegar apenas registros com ano_mandato=null (resultado final) ou todos se não há distinção
+  const todosFinal = [...alunos].sort((a,b)=>b.pontuacao.total-a.pontuacao.total);
+  const medalhas = ['🥇','🥈','🥉'];
+
+  // Ranking geral
+  document.getElementById('tbody-ranking-geral').innerHTML = todosFinal.length ? todosFinal.map((a,i)=>{
+    const medal = i<3?medalhas[i]:`${i+1}º`;
+    const vice = a.aluno.vice||a._vice||'—';
+    return `<tr style="${i<3?'background:var(--surface2)':''}">
+      <td style="font-family:Syne,sans-serif;font-size:14px;font-weight:800">${medal}</td>
+      <td><strong>${a.aluno.nome}</strong></td>
+      <td style="font-size:12px;color:var(--muted)">${vice}</td>
+      <td>${a.municipio.nome}</td>
+      <td><span class="badge-conc c-${a.pontuacao.conceito}">${a.pontuacao.conceito}</span></td>
+      <td><span class="score-cell" style="color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</span></td>
+      <td style="color:${a.pontuacao.pctOrcamento>50?'var(--red)':a.pontuacao.pctOrcamento>35?'var(--amber)':'var(--green)';font-family:Syne,sans-serif;font-weight:700}">${a.pontuacao.pctOrcamento}%</td>
+      <td style="font-family:Syne,sans-serif;font-size:12px">${a.pontuacao.eficMedia}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint)">Nenhum resultado ainda.</td></tr>`;
+
+  // Ranking por ano (1 a 4)
+  const rankAnos = document.getElementById('ranking-anos');
+  rankAnos.innerHTML = [1,2,3,4].map(ano=>{
+    const doAno = alunos
+      .filter(a=>a._ano_mandato===ano)
+      .sort((a,b)=>b.pontuacao.total-a.pontuacao.total);
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="background:var(--text);color:var(--bg);padding:.75rem 1rem;font-family:Syne,sans-serif;font-weight:700;font-size:13px">Ano ${ano} de Mandato</div>
+      <div style="padding:.5rem">
+      ${doAno.length ? doAno.slice(0,5).map((a,i)=>`
+        <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;border-radius:6px;background:${i===0?'var(--surface2)':'transparent'}">
+          <span style="font-family:Syne,sans-serif;font-weight:800;font-size:13px;width:24px;color:${barColor(a.pontuacao.total)}">${i<3?['🥇','🥈','🥉'][i]:i+1+'º'}</span>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:500">${a.aluno.nome}</div>
+            <div style="font-size:10px;color:var(--hint)">${a.municipio.nome}</div>
+          </div>
+          <span style="font-family:Syne,sans-serif;font-weight:800;font-size:14px;color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</span>
+        </div>`).join('')
+      : '<div style="padding:.75rem;font-size:12px;color:var(--hint);text-align:center">Sem dados para este ano</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function renderTudo(){
   const n = alunos.length;
   document.getElementById('hdr-count').textContent = n+' aluno'+(n!==1?'s':'');
@@ -488,6 +565,7 @@ function renderTudo(){
   renderAreas();
   renderDecisoesDist();
   renderMunicipios();
+  renderRanking();
 }
 
 function populaFiltroMuni(){
@@ -560,7 +638,7 @@ function renderTabelaAlunos(){
       <td style="font-family:Syne,sans-serif;font-size:12px">${a.pontuacao.eficMedia}</td>
       <td style="font-size:11px;color:var(--hint)">${a.aluno.turma||'—'}</td>
       <td style="font-size:11px;color:var(--hint)">${a._created_at ? new Date(a._created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
-      <td><button class="btn-sm" onclick="abrirModal('${a.aluno.nome.replace(/'/g,"\\'")}')">Ver detalhe</button></td>
+      <td><button class="btn-sm" onclick="abrirModal('${a.aluno.nome.replace(/'/g,"\\'")}')">Ver</button></td>
     </tr>`;
   }).join('') : `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint)">Nenhum aluno encontrado com esses filtros.</td></tr>`;
 }

@@ -627,17 +627,27 @@ h1, h2, h3, h4, .display {
   <div id="s-ident" class="screen">
     <div style="padding:2.5rem 0 1.5rem">
       <span class="welcome-tag">Antes de começar</span>
-      <h2 style="font-size:1.6rem;margin-bottom:.5rem">Sua identificação</h2>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:1.75rem">Informe seu nome completo. Ele será incluído no arquivo de resultado que você enviará ao professor.</p>
+      <h2 style="font-size:1.6rem;margin-bottom:.5rem">Identificação da dupla</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:1.75rem">Vocês formarão a chapa executiva do município. Informem os nomes — eles aparecerão nos feedbacks da população e no resultado final.</p>
     </div>
-    <div style="max-width:420px">
-      <label style="font-family:Syne,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);display:block;margin-bottom:.5rem">Nome completo</label>
-      <input type="text" id="inp-nome" placeholder="Ex: Maria Fernanda Souza"
-        style="width:100%;padding:.75rem 1rem;border:1px solid var(--border-strong);border-radius:8px;font-family:DM Sans,sans-serif;font-size:15px;background:var(--surface);color:var(--text);margin-bottom:1.25rem"
-        oninput="document.getElementById('btn-para-muni').disabled=this.value.trim().length<3">
-      <label style="font-family:Syne,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);display:block;margin-bottom:.5rem">Turma / Período (opcional)</label>
+    <div style="max-width:520px;display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem">
+      <div>
+        <label style="font-family:Syne,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);display:block;margin-bottom:.5rem">👤 Prefeito(a)</label>
+        <input type="text" id="inp-nome" placeholder="Nome completo"
+          style="width:100%;padding:.75rem 1rem;border:1px solid var(--border-strong);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;background:var(--surface);color:var(--text)"
+          oninput="checkIdentBtn()">
+      </div>
+      <div>
+        <label style="font-family:Syne,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);display:block;margin-bottom:.5rem">👤 Vice-prefeito(a)</label>
+        <input type="text" id="inp-vice" placeholder="Nome completo"
+          style="width:100%;padding:.75rem 1rem;border:1px solid var(--border-strong);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;background:var(--surface);color:var(--text)"
+          oninput="checkIdentBtn()">
+      </div>
+    </div>
+    <div style="max-width:520px;margin-bottom:1.5rem">
+      <label style="font-family:Syne,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);display:block;margin-bottom:.5rem">Turma / Período</label>
       <input type="text" id="inp-turma" placeholder="Ex: Adm 2024 — Noturno"
-        style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:15px;background:var(--surface);color:var(--text);margin-bottom:1.5rem">
+        style="width:100%;padding:.75rem 1rem;border:1px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;background:var(--surface);color:var(--text)">
     </div>
     <div class="nav-bar">
       <button class="btn" onclick="showWelcome()">← Voltar</button>
@@ -1035,7 +1045,17 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 // ══ ESTADO ══
 let muniIdx = null;
 let alunoNome = '';
+let alunoVice = '';
 let alunoTurma = '';
+let anoAtual = 1; // 1 a 4
+let resultadosAnuais = {}; // { 1: {...}, 2: {...}, ... }
+// Mapeamento de decisões por ano (5 por ano, misto de áreas)
+const DECISOES_POR_ANO = {
+  1: [0, 5, 6, 8, 13],   // Saúde básica, Fiscal, Folha, Viário, Epidemiologia
+  2: [2, 3, 7, 9, 14],   // Magistério, Infra escolar, Captação, Saneamento, Evasão
+  3: [1, 4, 10, 12, 16], // Saúde mental, Turismo, Escoamento, Resíduos, Mobilidade
+  4: [11, 15, 17, 18, 19] // Distrito industrial, Patrimônio, Habitação, Energia, Gov digital
+};
 let decAtual = 0;
 let respostas = new Array(DECISOES.length).fill(null);
 
@@ -1045,14 +1065,20 @@ function showWelcome(){
   document.getElementById('progress-wrap').style.display='none';
 }
 
+function checkIdentBtn(){
+  const n = (document.getElementById('inp-nome')||{value:''}).value.trim();
+  const v = (document.getElementById('inp-vice')||{value:''}).value.trim();
+  const btn = document.getElementById('btn-para-muni');
+  if(btn) btn.disabled = n.length < 3 || v.length < 3;
+}
 function showIdent(){
   setScreen('s-ident');
   document.getElementById('progress-wrap').style.display='none';
-  const n = document.getElementById('inp-nome');
-  if(n) document.getElementById('btn-para-muni').disabled = n.value.trim().length<3;
+  checkIdentBtn();
 }
 function showMuni(){
-  alunoNome = (document.getElementById('inp-nome')||{value:''}).value.trim()||'Aluno';
+  alunoNome = (document.getElementById('inp-nome')||{value:''}).value.trim()||'Prefeito(a)';
+  alunoVice  = (document.getElementById('inp-vice')||{value:''}).value.trim()||'Vice-prefeito(a)';
   alunoTurma = (document.getElementById('inp-turma')||{value:''}).value.trim();
   setScreen('s-muni');
   document.getElementById('progress-wrap').style.display='none';
@@ -1131,11 +1157,16 @@ function confirmarMuni(){
 function iniciarDecisoes(){
   if(muniIdx===null) return;
   decAtual=0; respostas=new Array(DECISOES.length).fill(null);
+  anoAtual=1; resultadosAnuais={};
   document.getElementById('progress-wrap').style.display='block';
   document.getElementById('prog-muni').textContent = MUNICIPIOS[muniIdx].nome;
   setScreen('s-decisoes');
   renderDecisao();
 }
+
+function decIdxNoAno(){ return DECISOES_POR_ANO[anoAtual]; }
+function decPosNoAno(){ return decIdxNoAno().indexOf(decAtual); }
+function totalRespostaNoAno(){ return decIdxNoAno().filter(i=>respostas[i]!==null).length; }
 
 // ══ DECISÕES ══
 function calcGastosAnuais(){
@@ -1143,6 +1174,7 @@ function calcGastosAnuais(){
 }
 
 function renderDecisao(){
+  const idxNoAno = DECISOES_POR_ANO[anoAtual];
   const d = DECISOES[decAtual];
   const m = MUNICIPIOS[muniIdx];
   const orcTotal = m.orcAnual*4;
@@ -1151,9 +1183,10 @@ function renderDecisao(){
   const pct = Math.min(100, Math.round(gTotal/orcTotal*100));
   const barColor = pct>50 ? '#B02020' : pct>35 ? '#C06000' : '#2D5016';
 
-  const prog = Math.round((decAtual+1)/DECISOES.length*100);
+  const posNoAno = idxNoAno.indexOf(decAtual)+1;
+  const prog = Math.round(((anoAtual-1)*5 + posNoAno) / 20 * 100);
   document.getElementById('prog-fill').style.width = prog+'%';
-  document.getElementById('prog-label').textContent = `Decisão ${decAtual+1} de ${DECISOES.length}`;
+  document.getElementById('prog-label').textContent = `Ano ${anoAtual} · Decisão ${posNoAno} de 5`;
 
   let html = `
   <div style="padding:1.5rem 0 1rem">
@@ -1207,12 +1240,25 @@ function renderDecisao(){
     </div>`;
   });
 
+  const idxAno = DECISOES_POR_ANO[anoAtual];
+  const posAno = idxAno.indexOf(decAtual);
+  const isUltimaDoAno = posAno === idxAno.length - 1;
+  const isUltimaGeral = anoAtual === 4 && isUltimaDoAno;
+  const podeAvancar = respostas[decAtual] !== null;
   html += `</div>
+  <div style="background:var(--surface2);border-radius:8px;padding:.5rem 1rem;margin-bottom:.75rem;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:.5rem">
+    <span style="font-family:Syne,sans-serif;font-weight:700;color:var(--text)">Ano ${anoAtual} de 4</span>
+    <span>·</span>
+    <span>${m.nome} · Chapa: ${alunoNome} & ${alunoVice}</span>
+    <span style="margin-left:auto">${posAno+1}/5 decisões deste ano</span>
+  </div>
   <div class="nav-bar">
-    <button class="btn" onclick="voltarDec()" ${decAtual===0?'disabled':''}>← Anterior</button>
-    ${decAtual < DECISOES.length-1
-      ? `<button class="btn btn-primary" onclick="avancarDec()" ${respostas[decAtual]===null?'disabled':''}>Próxima decisão →</button>`
-      : `<button class="btn btn-accent" onclick="mostrarResultado()" ${respostas[decAtual]===null?'disabled':''}>Ver resultado do mandato →</button>`
+    <button class="btn" onclick="voltarDec()" ${posAno===0?'disabled':''}>← Anterior</button>
+    ${isUltimaGeral
+      ? `<button class="btn btn-accent" onclick="mostrarResultadoFinal()" ${!podeAvancar?'disabled':''}>Encerrar mandato →</button>`
+      : isUltimaDoAno
+        ? `<button class="btn btn-primary" onclick="fecharAno()" ${!podeAvancar?'disabled':''}>Fechar Ano ${anoAtual} e ver balanço →</button>`
+        : `<button class="btn btn-primary" onclick="avancarDec()" ${!podeAvancar?'disabled':''}>Próxima decisão →</button>`
     }
   </div>
   </div>`;
@@ -1222,8 +1268,204 @@ function renderDecisao(){
 }
 
 function escolher(i){ respostas[decAtual]=i; renderDecisao(); }
-function avancarDec(){ if(decAtual<DECISOES.length-1){decAtual++;renderDecisao();} }
-function voltarDec(){ if(decAtual>0){decAtual--;renderDecisao();} }
+function avancarDec(){
+  const idxAno = DECISOES_POR_ANO[anoAtual];
+  const pos = idxAno.indexOf(decAtual);
+  if(pos < idxAno.length-1){ decAtual = idxAno[pos+1]; renderDecisao(); }
+}
+function voltarDec(){
+  const idxAno = DECISOES_POR_ANO[anoAtual];
+  const pos = idxAno.indexOf(decAtual);
+  if(pos > 0){ decAtual = idxAno[pos-1]; renderDecisao(); }
+}
+
+
+// ══ FEEDBACK ANUAL ══
+const DEPOIMENTOS = {
+  alto: [
+    (p,v,m)=>`"O prefeito ${p} e o vice ${v} estão mostrando que é possível fazer muito com os recursos que temos. Pela primeira vez em anos sinto que alguém está olhando para o nosso bairro." — Maria das Graças, 54, comerciante`,
+    (p,v,m)=>`"A gestão de ${p} trouxe seriedade para a prefeitura. As decisões que tomaram este ano foram difíceis, mas a gente já está vendo resultado." — João Batista, 61, agricultor`,
+    (p,v,m)=>`"Nunca pensei que veria mudanças tão rápidas. O prefeito ${p} tem sido firme e técnico ao mesmo tempo — isso é raro na política local." — Dr. Cláudio Ferreira, médico`,
+    (p,v,m)=>`"A vice ${v} esteve presente em todas as reuniões da comunidade. Isso faz diferença quando a gente quer ser ouvido." — Sônia Alves, professora`,
+  ],
+  medio: [
+    (p,v,m)=>`"A gestão do prefeito ${p} avançou em algumas áreas, mas ainda faltam respostas concretas para os problemas mais antigos da cidade. Esperamos mais do segundo ano." — Conselho Municipal de Saúde`,
+    (p,v,m)=>`"O vice ${v} tem feito um bom trabalho de articulação, mas as decisões sobre o orçamento ainda nos preocupam. O dinheiro público não pode ser desperdiçado." — Associação Comercial de ${m}`,
+    (p,v,m)=>`"Vejo esforço da parte do prefeito ${p}, mas gestão pública exige mais do que boa vontade — exige planejamento de longo prazo. Ainda estamos aguardando." — Prof. Antônio Lima, Câmara Municipal`,
+    (p,v,m)=>`"As obras prometidas vieram, mas o custo parece alto para o que foi entregue. Queremos mais transparência nas licitações." — Movimento Cidadania Ativa`,
+  ],
+  baixo: [
+    (p,v,m)=>`"Infelizmente, as escolhas do prefeito ${p} este ano priorizaram o que era visível e não o que era necessário. A população mais vulnerável segue sem resposta." — CRAS Municipal`,
+    (p,v,m)=>`"Não consigo entender como o vice ${v} deixou o orçamento chegar nessa situação. Estamos pagando agora por decisões que poderiam ter sido evitadas." — Sindicato dos Servidores Municipais`,
+    (p,v,m)=>`"A gestão de ${p} ainda não apresentou um plano estratégico claro. Cada decisão parece isolada das outras — falta visão de conjunto." — OAB Subseção ${m}`,
+    (p,v,m)=>`"Com esse nível de gasto e esse resultado, precisamos questionar as prioridades da gestão. A cidade merece mais." — Câmara de Vereadores, líder da oposição`,
+  ]
+};
+
+const CITACOES_TECNICAS = [
+  `Segundo Bresser-Pereira (1998), a reforma gerencial do Estado exige que gestores públicos sejam avaliados por resultados concretos, não apenas pela conformidade com processos. As escolhas desta gestão refletem esse desafio.`,
+  `Osborne e Gaebler (1992) argumentam que governos eficazes "dirigem mais do que remam" — definem estratégias claras e deixam a execução para quem tem melhores condições. As decisões deste ano evidenciam esse dilema.`,
+  `Para Mintzberg (1994), o planejamento formal sem adaptação à realidade organizacional gera estratégias que existem no papel mas não na prática. O balanço anual desta gestão ilustra esse risco.`,
+  `Bryson (2018) destaca que o planejamento estratégico público precisa equilibrar eficiência alocativa com equidade social. As escolhas feitas neste ano tendem mais para um polo do que para o outro.`,
+  `Conforme a teoria da agência aplicada ao setor público (Kettl, 2002), gestores municipais enfrentam tensão permanente entre os interesses do eleitorado, dos servidores e das normas legais. As decisões deste balanço refletem como essa tensão foi administrada.`,
+  `Hood (1991), ao teorizar a Nova Gestão Pública, alertou que a busca por eficiência pode sacrificar valores como equidade e accountability. As escolhas desta gestão precisam ser avaliadas sob essa dupla dimensão.`,
+];
+
+function calcularPontuacaoAno(ano){
+  const idxs = DECISOES_POR_ANO[ano];
+  const m = MUNICIPIOS[muniIdx];
+  const orcAno = m.orcAnual;
+  let somaEfic=0, somaCusto=0;
+  idxs.forEach(i=>{
+    const op = DECISOES[i].opcoes[respostas[i]];
+    somaEfic += op.efic;
+    somaCusto += op.custo;
+  });
+  const eficMedia = somaEfic/idxs.length;
+  const pctGasto = somaCusto/orcAno;
+  let bonus = pctGasto<=0.08?12:pctGasto<=0.15?6:pctGasto>0.35?-10:pctGasto>0.28?-5:0;
+  let penBaixa=0; idxs.forEach(i=>{ if(DECISOES[i].opcoes[respostas[i]].efic<50) penBaixa+=3; });
+  const total = Math.max(0,Math.min(100,Math.round(eficMedia+bonus-penBaixa)));
+  const somaCusto4 = somaCusto*4;
+  return { total, eficMedia:Math.round(eficMedia), pctGasto:Math.round(pctGasto*100), somaCusto:somaCusto.toFixed(1) };
+}
+
+function gerarFeedbackAnual(ano, pts){
+  const m = MUNICIPIOS[muniIdx];
+  const nivel = pts.total>=75?'alto':pts.total>=50?'medio':'baixo';
+  const deps = DEPOIMENTOS[nivel];
+  const d1 = deps[ano%deps.length](alunoNome,alunoVice,m.nome);
+  const d2 = deps[(ano+1)%deps.length](alunoNome,alunoVice,m.nome);
+  const cit = CITACOES_TECNICAS[(ano+pts.total)%CITACOES_TECNICAS.length];
+
+  // Indicadores simulados com variação por pontuação e decisões do ano
+  const base = pts.total;
+  const indics = {
+    aprovacao: Math.max(18,Math.min(94,base+Math.round((Math.random()-.4)*12))),
+    satisfacaoServicos: Math.max(15,Math.min(92,base-8+Math.round((Math.random()-.3)*15))),
+    eficienciaGasto: pts.eficMedia,
+    orcamentoUsado: pts.pctGasto,
+  };
+
+  // Crítica sempre presente mesmo nos bons
+  const criticas = {
+    alto: `Apesar dos avanços, setores como ${DECISOES[DECISOES_POR_ANO[ano][ano%5]].area.toLowerCase()} ainda demandam atenção prioritária nos próximos anos.`,
+    medio: `As áreas de maior fragilidade — especialmente ${DECISOES[DECISOES_POR_ANO[ano][0]].area.toLowerCase()} — precisam de resposta mais estruturada no próximo ano.`,
+    baixo: `A gestão precisa revisar profundamente suas prioridades. A combinação de alto custo e baixo impacto nas decisões deste ano compromete a credibilidade da chapa ${alunoNome}/${alunoVice}.`
+  };
+
+  return { nivel, deps:[d1,d2], cit, indics, critica:criticas[nivel] };
+}
+
+async function salvarAnoSupabase(ano, pts, feedback){
+  try{
+    const m = MUNICIPIOS[muniIdx];
+    const body = {
+      nome_aluno: alunoNome,
+      turma: alunoTurma||'',
+      municipio: m.nome,
+      municipio_estado: m.estado,
+      municipio_problema: m.problema,
+      conceito: pts.total>=75?'A':pts.total>=60?'B':pts.total>=45?'C':pts.total>=30?'D':'F',
+      pontuacao: pts.total,
+      pct_orcamento: pts.pctGasto,
+      efic_media: pts.eficMedia,
+      total_comprometido: parseFloat(pts.somaCusto),
+      indicadores: feedback.indics,
+      decisoes: DECISOES_POR_ANO[ano].map(i=>({
+        numero:i+1, area:DECISOES[i].area, titulo:DECISOES[i].titulo,
+        opcaoEscolhida:DECISOES[i].opcoes[respostas[i]].letra,
+        tituloEscolha:DECISOES[i].opcoes[respostas[i]].titulo,
+        custo:DECISOES[i].opcoes[respostas[i]].custo,
+        eficiencia:DECISOES[i].opcoes[respostas[i]].efic
+      })),
+      vice_prefeito: alunoVice,
+      ano_mandato: ano
+    };
+    await fetch(SUPA_URL+'/rest/v1/respostas',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},
+      body:JSON.stringify(body)
+    });
+  }catch(e){ console.warn('Supabase save ano',ano,e); }
+}
+
+function fecharAno(){
+  const pts = calcularPontuacaoAno(anoAtual);
+  const feedback = gerarFeedbackAnual(anoAtual, pts);
+  resultadosAnuais[anoAtual] = { pts, feedback };
+  salvarAnoSupabase(anoAtual, pts, feedback);
+  mostrarBalancoAnual(anoAtual, pts, feedback);
+}
+
+function mostrarBalancoAnual(ano, pts, feedback){
+  setScreen('s-decisoes');
+  const nivelCor = pts.total>=75?'var(--accent)':pts.total>=50?'var(--gold, #8B6914)':'var(--danger, #7A1A1A)';
+  const nivelLabel = pts.total>=75?'Ano positivo':pts.total>=50?'Ano regular':'Ano crítico';
+
+  document.getElementById('dec-content').innerHTML = `
+  <div style="padding:1.5rem 0">
+    <div style="background:var(--text);color:var(--bg);border-radius:14px;padding:1.5rem;margin-bottom:1.25rem;position:relative;overflow:hidden">
+      <div style="position:absolute;right:-10px;top:-10px;font-family:Syne,sans-serif;font-size:7rem;font-weight:800;opacity:.06;line-height:1">${ano}</div>
+      <div style="font-family:Syne,sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.45;margin-bottom:.5rem">Balanço do Ano ${ano} de Mandato</div>
+      <div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:.25rem">${MUNICIPIOS[muniIdx].nome}</div>
+      <div style="font-size:12px;opacity:.55;margin-bottom:1rem">Prefeito(a): ${alunoNome} · Vice: ${alunoVice}</div>
+      <div style="display:flex;align-items:baseline;gap:.375rem">
+        <span style="font-family:Syne,sans-serif;font-size:2.5rem;font-weight:800">${pts.total}</span>
+        <span style="opacity:.4;font-size:1rem">/ 100 pts neste ano</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin-top:.75rem;overflow:hidden">
+        <div style="width:${pts.total}%;height:100%;background:${nivelCor};border-radius:2px"></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem">
+        <div style="font-family:Syne,sans-serif;font-size:1.1rem;font-weight:800;color:${nivelCor}">${pts.total}</div>
+        <div style="font-size:10px;color:var(--text-hint);margin-top:2px">Pontuação</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem">
+        <div style="font-family:Syne,sans-serif;font-size:1.1rem;font-weight:800">${feedback.indics.aprovacao}%</div>
+        <div style="font-size:10px;color:var(--text-hint);margin-top:2px">Aprovação popular</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem">
+        <div style="font-family:Syne,sans-serif;font-size:1.1rem;font-weight:800">${pts.eficMedia}/100</div>
+        <div style="font-size:10px;color:var(--text-hint);margin-top:2px">Efic. orçamentária</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem">
+        <div style="font-family:Syne,sans-serif;font-size:1.1rem;font-weight:800;color:${pts.pctGasto>30?'#B02020':'#2D5016'}">${pts.pctGasto}%</div>
+        <div style="font-size:10px;color:var(--text-hint);margin-top:2px">Orçamento anual usado</div>
+      </div>
+    </div>
+
+    <div style="font-family:Syne,sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);margin-bottom:.625rem">Vozes da comunidade</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.25rem">
+      ${feedback.deps.map(d=>`
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.875rem 1rem;font-size:13px;color:var(--text-muted);line-height:1.65;font-style:italic">${d}</div>
+      `).join('')}
+    </div>
+
+    <div style="background:var(--accent-light,#EBF2E0);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:.875rem 1.125rem;margin-bottom:1.25rem;font-size:13px;color:var(--accent);line-height:1.65">
+      <strong style="display:block;margin-bottom:.375rem;font-family:Syne,sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase">Perspectiva técnica</strong>
+      ${feedback.cit}
+    </div>
+
+    <div style="background:#FFF0F0;border-left:3px solid #B02020;border-radius:0 8px 8px 0;padding:.875rem 1.125rem;margin-bottom:1.5rem;font-size:13px;color:#7A1A1A;line-height:1.6">
+      <strong style="display:block;margin-bottom:.375rem;font-family:Syne,sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase">Ponto de atenção</strong>
+      ${feedback.critica}
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-primary" onclick="iniciarAno(${ano+1})">Iniciar Ano ${ano+1} →</button>
+    </div>
+  </div>`;
+}
+
+function iniciarAno(ano){
+  anoAtual = ano;
+  decAtual = DECISOES_POR_ANO[ano][0];
+  renderDecisao();
+}
 
 // ══ PONTUAÇÃO ══
 function calcularPontuacao(){
@@ -1310,6 +1552,95 @@ function gerarNarrativa(pts, cl, m){
 function getBarColor(v){ return v>=80?'#2D5016':v>=65?'#8B6914':'#7A1A1A'; }
 
 // ══ RESULTADO ══
+function mostrarResultadoFinal(){
+  // Calcular pontuação final acumulada
+  const pts = calcularPontuacao();
+  const cl = getClass(pts.total);
+  const m = MUNICIPIOS[muniIdx];
+  const narr = gerarNarrativa(pts, cl, m);
+  const areas = ["Saúde","Educação","Turismo","Finanças","Infraestrutura","Logística"];
+  const fiscalClass = pts.pctGasto<=35?'fs-ok':pts.pctGasto<=50?'fs-warn':'fs-crit';
+
+  // Pontuações por ano
+  const ptsPorAno = [1,2,3,4].map(a=> resultadosAnuais[a]?resultadosAnuais[a].pts.total:0);
+  const mediaAnual = (ptsPorAno.reduce((s,x)=>s+x,0)/4).toFixed(1);
+
+  document.getElementById('progress-wrap').style.display='none';
+  setScreen('s-resultado');
+
+  document.getElementById('res-content').innerHTML = `
+  <div style="padding-top:1.5rem">
+
+  <div class="result-hero" data-letter="${cl.letra}">
+    <div class="result-muni">${m.nome} · ${m.estado} · ${m.pop.toLocaleString('pt-BR')} hab.</div>
+    <div class="result-class">${cl.label}</div>
+    <div style="font-size:12px;opacity:.55;margin-bottom:.75rem">Prefeito(a): ${alunoNome} · Vice-prefeito(a): ${alunoVice}</div>
+    <div><span class="result-badge rb-${cl.letra}">Conceito ${cl.letra}</span></div>
+    <div class="result-score">
+      <span class="score-big">${pts.total}</span>
+      <span class="score-denom">/ 100 pts (mandato completo)</span>
+    </div>
+    <div class="result-desc">${cl.desc}</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem">
+    ${[1,2,3,4].map(a=>{
+      const p = resultadosAnuais[a]?resultadosAnuais[a].pts.total:0;
+      const c = p>=75?'#2D5016':p>=50?'#8B6914':'#7A1A1A';
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.875rem;text-align:center">
+        <div style="font-family:Syne,sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);margin-bottom:4px">Ano ${a}</div>
+        <div style="font-family:Syne,sans-serif;font-size:1.5rem;font-weight:800;color:${c}">${p}</div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="fiscal-strip ${fiscalClass}">
+    <strong>Situação fiscal do mandato:</strong> R$ ${pts.somaCusto} mi comprometidos de R$ ${(m.orcAnual*4).toFixed(1)} mi disponíveis (${pts.pctGasto}% do orçamento). Eficiência média: ${pts.eficMedia}/100.
+  </div>
+
+  <span class="section-label">Indicadores por área — mandato completo</span>
+  <div class="ind-grid">
+    ${areas.map(a=>`
+    <div class="ind-card">
+      <div class="ind-nome">${a}</div>
+      <div class="ind-val" style="color:${getBarColor(pts.porArea[a])}">${pts.porArea[a]}</div>
+      <div class="ind-bar-t"><div class="ind-bar-f" style="width:${pts.porArea[a]}%;background:${getBarColor(pts.porArea[a])}"></div></div>
+    </div>`).join('')}
+  </div>
+
+  <div class="divider"></div>
+  <span class="section-label">Narrativa do mandato</span>
+  <div class="narrativa-card">
+    ${narr.map(p=>`<p>${p}</p>`).join('')}
+  </div>
+
+  <div class="divider"></div>
+  <span class="section-label">Resumo das 20 decisões</span>
+  <div class="dec-resumo">
+    ${DECISOES.map((d,i)=>{
+      const op = d.opcoes[respostas[i]];
+      const eficColor = op.efic>=80?'#2D5016':op.efic>=60?'#8B6914':'#7A1A1A';
+      return `<div class="dec-row">
+        <div class="dec-row-letra">${op.letra}</div>
+        <div class="dec-row-info">
+          <div class="dec-row-titulo">${d.titulo}</div>
+          <div class="dec-row-escolha">${op.titulo}</div>
+          <div class="dec-row-efic" style="color:${eficColor}">R$ ${op.custo.toFixed(1)} mi/ano · Eficiência: ${op.efic}/100 · ${d.prazo.split(' ')[0]}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="nav-bar" style="margin-top:1.5rem">
+    <button class="btn" onclick="reiniciar()">← Refazer exercício</button>
+    <button class="btn btn-accent" id="btn-enviar" onclick="enviarSupabase()">✉ Enviar resultado final ao professor</button>
+    <button class="btn" onclick="downloadJSON()">⬇ Baixar JSON</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir</button>
+  </div>
+  <div id="envio-status" style="margin-top:.75rem;font-size:13px;text-align:center;display:none"></div>
+  </div>`;
+}
+
 function mostrarResultado(){
   document.getElementById('progress-wrap').style.display='none';
   setScreen('s-resultado');
