@@ -1028,6 +1028,10 @@ const AREA_BADGE = {
   "Finanças":"b-fin","Infraestrutura":"b-infra","Logística":"b-log"
 };
 
+
+// ══ SUPABASE ══
+const SUPA_URL = 'https://tukzhkgvqiecfwvxnlkj.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1a3poa2d2cWllY2Z3dnhubGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTUzMTgsImV4cCI6MjA5NjA5MTMxOH0.RNKDD8RA56oTfVzCaoGDOrE_fDVQo-kXFiLPkM9D1jQ';
 // ══ ESTADO ══
 let muniIdx = null;
 let alunoNome = '';
@@ -1370,9 +1374,11 @@ function mostrarResultado(){
 
   <div class="nav-bar">
     <button class="btn" onclick="reiniciar()">← Refazer exercício</button>
-    <button class="btn btn-accent" onclick="downloadJSON()">⬇ Baixar resultado (JSON)</button>
-    <button class="btn btn-primary" onclick="window.print()">Imprimir resultado</button>
+    <button class="btn btn-accent" id="btn-enviar" onclick="enviarSupabase()">✉ Enviar resultado ao professor</button>
+    <button class="btn" onclick="downloadJSON()">⬇ Baixar JSON</button>
+    <button class="btn btn-primary" onclick="window.print()">Imprimir</button>
   </div>
+  <div id="envio-status" style="margin-top:.75rem;font-size:13px;text-align:center;display:none"></div>
   </div>`;
 
   document.getElementById('res-content').innerHTML = html;
@@ -1408,6 +1414,59 @@ function downloadJSON(){
   a.click();
   URL.revokeObjectURL(a.href);
 }
+async function enviarSupabase(){
+  const btn = document.getElementById('btn-enviar');
+  const status = document.getElementById('envio-status');
+  if(!btn||!status) return;
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  status.style.display = 'block';
+  status.style.color = 'var(--text-muted)';
+  status.textContent = 'Conectando ao banco de dados...';
+  try {
+    const p = gerarPayload();
+    const body = {
+      nome_aluno: p.aluno.nome,
+      turma: p.aluno.turma || '',
+      municipio: p.municipio.nome,
+      municipio_estado: p.municipio.estado,
+      municipio_problema: p.municipio.problema,
+      conceito: p.pontuacao.conceito,
+      pontuacao: p.pontuacao.total,
+      pct_orcamento: p.pontuacao.pctOrcamento,
+      efic_media: p.pontuacao.eficMedia,
+      total_comprometido: p.pontuacao.totalComprometido,
+      indicadores: p.indicadoresPorArea,
+      decisoes: p.decisoes
+    };
+    const res = await fetch(SUPA_URL + '/rest/v1/respostas', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(body)
+    });
+    if(res.ok || res.status === 201){
+      btn.textContent = '✓ Resultado enviado!';
+      btn.style.background = 'var(--accent)';
+      status.style.color = 'var(--accent)';
+      status.textContent = 'Seu resultado foi registrado com sucesso. O professor já pode visualizá-lo no painel.';
+    } else {
+      const err = await res.text();
+      throw new Error(err);
+    }
+  } catch(e){
+    btn.disabled = false;
+    btn.textContent = '✉ Enviar resultado ao professor';
+    status.style.color = 'var(--danger)';
+    status.textContent = 'Erro ao enviar. Tente novamente ou baixe o JSON e envie por e-mail.';
+    console.error('Supabase error:', e);
+  }
+}
+
 function reiniciar(){
   muniIdx=null; decAtual=0; respostas=new Array(DECISOES.length).fill(null);
   for(let j=0;j<10;j++){
