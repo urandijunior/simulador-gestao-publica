@@ -554,7 +554,7 @@ function renderRanking(){
       <td>${a.municipio.nome}</td>
       <td><span class="badge-conc c-${a.pontuacao.conceito}">${a.pontuacao.conceito}</span></td>
       <td><span class="score-cell" style="color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</span></td>
-      <td style="color:${a.pontuacao.pctOrcamento>50?'var(--red)':a.pontuacao.pctOrcamento>35?'var(--amber)':'var(--green)';font-family:Syne,sans-serif;font-weight:700}">${a.pontuacao.pctOrcamento}%</td>
+      <td><span style="font-family:Syne,sans-serif;font-weight:700;color:${a.pontuacao.pctOrcamento>50?'var(--red)':a.pontuacao.pctOrcamento>35?'var(--amber)':'var(--green)'}">${a.pontuacao.pctOrcamento}%</span></td>
       <td style="font-family:Syne,sans-serif;font-size:12px">${a.pontuacao.eficMedia}</td>
     </tr>`;
   }).join('') : `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint)">Nenhum resultado ainda.</td></tr>`;
