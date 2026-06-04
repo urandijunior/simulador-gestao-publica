@@ -687,8 +687,6 @@ function renderMetricas(){
     if(!maiorAnoPorNome[a.aluno.nome]||a._ano_mandato>maiorAnoPorNome[a.aluno.nome]._ano_mandato)
       maiorAnoPorNome[a.aluno.nome]=a;
   });
-  const base = [...finais,...Object.values(maiorAnoPorNome)];
-  const pts = base.map(a=>a.pontuacao.total);
   const listaMedia = listaAlunosComMedia();
   if(!listaMedia.length){ document.getElementById('metrics-gerais').innerHTML='<div style="color:var(--muted);font-size:13px;padding:.5rem">Nenhum resultado ainda.</div>'; return; }
   const pts = listaMedia.map(a => a.media);
