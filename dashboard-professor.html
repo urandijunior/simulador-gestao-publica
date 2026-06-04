@@ -909,28 +909,35 @@ function renderMunicipios(){
 
 // ── MODAL DETALHE
 function abrirModal(nome){
-  const a = alunos.find(x=>x.aluno.nome===nome);
-  if(!a) return;
-  document.getElementById('modal-titulo').textContent = a.aluno.nome;
-  const areas = ["Saúde","Educação","Turismo","Finanças","Infraestrutura","Logística"];
+  // Pegar todos os registros do aluno
+  const todosDoAluno = alunos.filter(x => x.aluno.nome === nome);
+  if(!todosDoAluno.length) return;
 
-  // Buscar todos os registros anuais deste aluno para montar histórico de feedbacks
-  const registrosDoAluno = alunos.filter(r => r.aluno.nome === a.aluno.nome);
-  const anuaisDoAluno = registrosDoAluno
+  // Usar resultado final se existir, senão o mais recente
+  const final = todosDoAluno.find(r => r._ano_mandato === null);
+  const anuaisDoAluno = todosDoAluno
     .filter(r => r._ano_mandato !== null)
     .sort((x,y) => x._ano_mandato - y._ano_mandato);
+  const a = final || anuaisDoAluno[anuaisDoAluno.length - 1];
+  if(!a) return;
 
-  const nivelCor = n => n==='alto'?'var(--green)':n==='medio'?'var(--amber)':'var(--red)';
-  const nivelLabel = n => n==='alto'?'Ano positivo':n==='medio'?'Ano regular':'Ano crítico';
+  // Médias calculadas
+  const med = listaAlunosComMedia().find(m => m.nome === nome) || {};
+
+  document.getElementById('modal-titulo').textContent = a.aluno.nome + (a._vice ? ' & ' + a._vice : '');
+  const areas = ["Saúde","Educação","Turismo","Finanças","Infraestrutura","Logística"];
+
+  const nivelCor = n => n==='alto'?'var(--green,#2D5016)':n==='medio'?'var(--amber,#8B6914)':'var(--red,#7A1A1A)';
+  const nivelLabel = n => n==='alto'?'✓ Ano positivo':n==='medio'?'~ Ano regular':'✗ Ano crítico';
 
   document.getElementById('modal-body').innerHTML = `
     <div class="modal-metrics">
-      <div class="m-met"><div class="m-met-val" style="color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</div><div class="m-met-lbl">Pontuação</div></div>
-      <div class="m-met"><div class="m-met-val"><span class="badge-conc c-${a.pontuacao.conceito}">${a.pontuacao.conceito}</span></div><div class="m-met-lbl">Conceito</div></div>
-      <div class="m-met"><div class="m-met-val">${a.pontuacao.pctOrcamento}%</div><div class="m-met-lbl">Orçamento usado</div></div>
-      <div class="m-met"><div class="m-met-val">${a.pontuacao.eficMedia}</div><div class="m-met-lbl">Efic. média</div></div>
+      <div class="m-met"><div class="m-met-val" style="color:${barColor(med.media||a.pontuacao.total)}">${med.media||a.pontuacao.total}</div><div class="m-met-lbl">Pontuação média</div></div>
+      <div class="m-met"><div class="m-met-val"><span class="badge-conc c-${med.conceito||a.pontuacao.conceito}">${med.conceito||a.pontuacao.conceito}</span></div><div class="m-met-lbl">Conceito</div></div>
+      <div class="m-met"><div class="m-met-val" style="color:${(med.pctOrcamento||a.pontuacao.pctOrcamento)>50?'var(--red)':'inherit'}">${med.pctOrcamento||a.pontuacao.pctOrcamento}%</div><div class="m-met-lbl">Orçamento médio</div></div>
+      <div class="m-met"><div class="m-met-val">${med.eficMedia||a.pontuacao.eficMedia}</div><div class="m-met-lbl">Efic. média</div></div>
       <div class="m-met"><div class="m-met-val">${a.municipio.nome}</div><div class="m-met-lbl">Município</div></div>
-      <div class="m-met"><div class="m-met-val">${a.aluno.turma||a._vice||'—'}</div><div class="m-met-lbl">Vice / Turma</div></div>
+      <div class="m-met"><div class="m-met-val">${anuaisDoAluno.length}/4</div><div class="m-met-lbl">Anos respondidos</div></div>
     </div>
 
     <span class="sec-lbl">Indicadores por área</span>
@@ -942,8 +949,8 @@ function abrirModal(nome){
       </div>`).join('')}
     </div>
 
-    ${anuaisDoAluno.length ? `
     <span class="sec-lbl">Feedback da população — por ano de mandato</span>
+    ${anuaisDoAluno.length ? `
     <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:1.25rem">
       ${anuaisDoAluno.map(reg => {
         const fb = reg.feedback_anual;
@@ -974,7 +981,8 @@ function abrirModal(nome){
           </div>
         </div>`;
       }).join('')}
-    </div>` : ''}
+    </div>`
+    : '<div style="background:var(--surface2);border-radius:8px;padding:1rem;font-size:13px;color:var(--hint);text-align:center">Nenhum feedback anual registrado ainda — disponível após o aluno fechar cada ano de mandato.</div>'}
 
     <span class="sec-lbl">Decisões registradas</span>
     <div class="dec-list">${a.decisoes.map((d,i)=>{
