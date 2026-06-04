@@ -531,54 +531,123 @@ async function processFiles(files){
 }
 
 // ══ RENDER ════════════════════════════════════════════════════════════════
+// Calcula pontuação acumulada real de um aluno
+// Considera todos os registros anuais disponíveis e faz média ponderada
+function calcularMediaAcumulada(nome){
+  const todos = alunos.filter(a => a.aluno.nome === nome);
+  const final = todos.find(a => a._ano_mandato === null);
+
+  // Se tem resultado final, usa ele diretamente (já calcula sobre as 20 decisões)
+  if(final) return {
+    media: final.pontuacao.total,
+    anosDisponiveis: 4,
+    fonte: 'final',
+    conceito: final.pontuacao.conceito,
+    pctOrcamento: final.pontuacao.pctOrcamento,
+    eficMedia: final.pontuacao.eficMedia,
+    registro: final
+  };
+
+  // Sem resultado final: média dos anos respondidos
+  const anuais = todos
+    .filter(a => a._ano_mandato !== null)
+    .sort((a,b) => a._ano_mandato - b._ano_mandato);
+
+  if(!anuais.length) return null;
+
+  const soma = anuais.reduce((s,a) => s + a.pontuacao.total, 0);
+  const media = Math.round(soma / anuais.length);
+  const ultimo = anuais[anuais.length - 1];
+  const conceito = media>=88?'A':media>=75?'B':media>=60?'C':media>=45?'D':'F';
+
+  return {
+    media,
+    anosDisponiveis: anuais.length,
+    fonte: 'anuais',
+    conceito,
+    pctOrcamento: Math.round(anuais.reduce((s,a)=>s+a.pontuacao.pctOrcamento,0)/anuais.length),
+    eficMedia: Math.round(anuais.reduce((s,a)=>s+a.pontuacao.eficMedia,0)/anuais.length),
+    registro: ultimo
+  };
+}
+
+// Montar lista única de alunos com suas médias acumuladas
+function listaAlunosComMedia(){
+  const nomes = [...new Set(alunos.map(a => a.aluno.nome))];
+  return nomes
+    .map(nome => {
+      const calc = calcularMediaAcumulada(nome);
+      if(!calc) return null;
+      return {
+        nome,
+        vice: calc.registro._vice || calc.registro.aluno.vice || '—',
+        municipio: calc.registro.municipio.nome,
+        turma: calc.registro.aluno.turma || '—',
+        media: calc.media,
+        anosDisponiveis: calc.anosDisponiveis,
+        fonte: calc.fonte,
+        conceito: calc.conceito,
+        pctOrcamento: calc.pctOrcamento,
+        eficMedia: calc.eficMedia,
+        _created_at: calc.registro._created_at
+      };
+    })
+    .filter(Boolean);
+}
+
 function renderRanking(){
-  // Ranking geral: finais + mais recente por nome de quem não tem final
-  const finais = alunos.filter(a=>a._ano_mandato===null);
-  const anuais = alunos.filter(a=>a._ano_mandato!==null);
-  const nomesComFinal = new Set(finais.map(a=>a.aluno.nome));
-  const maiorAnoPorNome = {};
-  anuais.filter(a=>!nomesComFinal.has(a.aluno.nome)).forEach(a=>{
-    if(!maiorAnoPorNome[a.aluno.nome]||a._ano_mandato>maiorAnoPorNome[a.aluno.nome]._ano_mandato)
-      maiorAnoPorNome[a.aluno.nome]=a;
-  });
-  const todosFinal = [...finais,...Object.values(maiorAnoPorNome)].sort((a,b)=>b.pontuacao.total-a.pontuacao.total);
+  const lista = listaAlunosComMedia().sort((a,b) => b.media - a.media);
   const medalhas = ['🥇','🥈','🥉'];
 
-  // Ranking geral
-  document.getElementById('tbody-ranking-geral').innerHTML = todosFinal.length ? todosFinal.map((a,i)=>{
-    const medal = i<3?medalhas[i]:`${i+1}º`;
-    const vice = a.aluno.vice||a._vice||'—';
-    return `<tr style="${i<3?'background:var(--surface2)':''}">
-      <td style="font-family:Syne,sans-serif;font-size:14px;font-weight:800">${medal}</td>
-      <td><strong>${a.aluno.nome}</strong></td>
-      <td style="font-size:12px;color:var(--muted)">${vice}</td>
-      <td>${a.municipio.nome}</td>
-      <td><span class="badge-conc c-${a.pontuacao.conceito}">${a.pontuacao.conceito}</span></td>
-      <td><span class="score-cell" style="color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</span></td>
-      <td><span style="font-family:Syne,sans-serif;font-weight:700;color:${a.pontuacao.pctOrcamento>50?'var(--red)':a.pontuacao.pctOrcamento>35?'var(--amber)':'var(--green)'}">${a.pontuacao.pctOrcamento}%</span></td>
-      <td style="font-family:Syne,sans-serif;font-size:12px">${a.pontuacao.eficMedia}</td>
-    </tr>`;
-  }).join('') : `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint)">Nenhum resultado ainda.</td></tr>`;
+  // ── Ranking geral com média acumulada ──
+  document.getElementById('tbody-ranking-geral').innerHTML = lista.length
+    ? lista.map((a,i) => {
+        const medal = i<3 ? medalhas[i] : `${i+1}º`;
+        const fonteLabel = a.fonte==='final'
+          ? `<span style="font-size:10px;color:var(--hint)">Mandato completo</span>`
+          : `<span style="font-size:10px;color:var(--amber,#8B6914)">Média ${a.anosDisponiveis} ano${a.anosDisponiveis>1?'s':''}</span>`;
+        return `<tr style="${i<3?'background:var(--surface2)':''}">
+          <td style="font-family:Syne,sans-serif;font-size:14px;font-weight:800">${medal}</td>
+          <td>
+            <strong>${a.nome}</strong><br>
+            ${fonteLabel}
+          </td>
+          <td style="font-size:12px;color:var(--muted)">${a.vice}</td>
+          <td>${a.municipio}</td>
+          <td><span class="badge-conc c-${a.conceito}">${a.conceito}</span></td>
+          <td>
+            <span class="score-cell" style="color:${barColor(a.media)};font-size:1.1rem">${a.media}</span>
+            ${a.fonte==='anuais'?`<span style="font-size:10px;color:var(--hint);display:block">média acumulada</span>`:''}
+          </td>
+          <td><span style="font-family:Syne,sans-serif;font-weight:700;color:${a.pctOrcamento>50?'var(--red)':a.pctOrcamento>35?'var(--amber)':'var(--green)'}">${a.pctOrcamento}%</span></td>
+          <td style="font-family:Syne,sans-serif;font-size:12px">${a.eficMedia}</td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint)">Nenhum resultado ainda.</td></tr>`;
 
-  // Ranking por ano (1 a 4)
+  // ── Ranking por ano (pontuação específica de cada ano) ──
   const rankAnos = document.getElementById('ranking-anos');
-  rankAnos.innerHTML = [1,2,3,4].map(ano=>{
+  rankAnos.innerHTML = [1,2,3,4].map(ano => {
     const doAno = alunos
-      .filter(a=>a._ano_mandato===ano)
-      .sort((a,b)=>b.pontuacao.total-a.pontuacao.total);
+      .filter(a => a._ano_mandato === ano)
+      .sort((a,b) => b.pontuacao.total - a.pontuacao.total);
     return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
-      <div style="background:var(--text);color:var(--bg);padding:.75rem 1rem;font-family:Syne,sans-serif;font-weight:700;font-size:13px">Ano ${ano} de Mandato</div>
+      <div style="background:var(--text);color:var(--bg);padding:.75rem 1rem;font-family:Syne,sans-serif;font-weight:700;font-size:13px">
+        Ano ${ano} de Mandato
+        <span style="font-weight:400;font-size:11px;opacity:.5;margin-left:.5rem">${doAno.length} resposta${doAno.length!==1?'s':''}</span>
+      </div>
       <div style="padding:.5rem">
-      ${doAno.length ? doAno.slice(0,5).map((a,i)=>`
-        <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;border-radius:6px;background:${i===0?'var(--surface2)':'transparent'}">
-          <span style="font-family:Syne,sans-serif;font-weight:800;font-size:13px;width:24px;color:${barColor(a.pontuacao.total)}">${i<3?['🥇','🥈','🥉'][i]:i+1+'º'}</span>
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:500">${a.aluno.nome}</div>
-            <div style="font-size:10px;color:var(--hint)">${a.municipio.nome}</div>
-          </div>
-          <span style="font-family:Syne,sans-serif;font-weight:800;font-size:14px;color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</span>
-        </div>`).join('')
-      : '<div style="padding:.75rem;font-size:12px;color:var(--hint);text-align:center">Sem dados para este ano</div>'}
+        ${doAno.length
+          ? doAno.slice(0,5).map((a,i) => `
+            <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;border-radius:6px;background:${i===0?'var(--surface2)':'transparent'}">
+              <span style="font-family:Syne,sans-serif;font-weight:800;font-size:13px;width:24px;color:${barColor(a.pontuacao.total)}">${i<3?medalhas[i]:i+1+'º'}</span>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:500">${a.aluno.nome}</div>
+                <div style="font-size:10px;color:var(--hint)">${a.municipio.nome}</div>
+              </div>
+              <span style="font-family:Syne,sans-serif;font-weight:800;font-size:14px;color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</span>
+            </div>`).join('')
+          : '<div style="padding:.75rem;font-size:12px;color:var(--hint);text-align:center">Sem dados para este ano ainda</div>'}
       </div>
     </div>`;
   }).join('');
@@ -620,18 +689,20 @@ function renderMetricas(){
   });
   const base = [...finais,...Object.values(maiorAnoPorNome)];
   const pts = base.map(a=>a.pontuacao.total);
-  if(!pts.length){ document.getElementById('metrics-gerais').innerHTML='<div style="color:var(--muted);font-size:13px;padding:.5rem">Nenhum resultado ainda.</div>'; return; }
+  const listaMedia = listaAlunosComMedia();
+  if(!listaMedia.length){ document.getElementById('metrics-gerais').innerHTML='<div style="color:var(--muted);font-size:13px;padding:.5rem">Nenhum resultado ainda.</div>'; return; }
+  const pts = listaMedia.map(a => a.media);
   const avg = pts.reduce((s,x)=>s+x,0)/pts.length;
   const max = Math.max(...pts); const min = Math.min(...pts);
   const concs = {A:0,B:0,C:0,D:0,F:0};
-  base.forEach(a=>concs[a.pontuacao.conceito]=(concs[a.pontuacao.conceito]||0)+1);
-  const melhor = base.reduce((b,a)=>a.pontuacao.total>b.pontuacao.total?a:b);
-  const avgOrc = base.reduce((s,a)=>s+a.pontuacao.pctOrcamento,0)/base.length;
+  listaMedia.forEach(a=>concs[a.conceito]=(concs[a.conceito]||0)+1);
+  const melhor = listaMedia.reduce((b,a)=>a.media>b.media?a:b);
+  const avgOrc = listaMedia.reduce((s,a)=>s+a.pctOrcamento,0)/listaMedia.length;
 
   document.getElementById('metrics-gerais').innerHTML = `
     <div class="metric"><div class="metric-lbl">Total de alunos</div><div class="metric-val">${alunos.length}</div><div class="metric-sub">arquivos carregados</div></div>
     <div class="metric"><div class="metric-lbl">Pontuação média</div><div class="metric-val" style="color:${barColor(avg)}">${avg.toFixed(1)}</div><div class="metric-sub">de 100 pontos</div></div>
-    <div class="metric"><div class="metric-lbl">Melhor resultado</div><div class="metric-val" style="color:${barColor(max)}">${max}</div><div class="metric-sub">${melhor.aluno.nome.split(' ')[0]}</div></div>
+    <div class="metric"><div class="metric-lbl">Melhor resultado</div><div class="metric-val" style="color:${barColor(max)}">${max}</div><div class="metric-sub">${melhor.nome.split(' ')[0]}</div></div>
     <div class="metric"><div class="metric-lbl">Menor resultado</div><div class="metric-val" style="color:${barColor(min)}">${min}</div><div class="metric-sub">pontos</div></div>
     <div class="metric"><div class="metric-lbl">Dist. de conceitos</div><div class="metric-val" style="font-size:1rem;display:flex;gap:5px;flex-wrap:wrap;padding-top:4px">${['A','B','C','D','F'].map(c=>`<span class="badge-conc c-${c}">${c}: ${concs[c]||0}</span>`).join('')}</div></div>
     <div class="metric"><div class="metric-lbl">Orçamento médio usado</div><div class="metric-val" style="color:${avgOrc>50?'var(--red)':avgOrc>35?'var(--amber)':'var(--green)'}">${avgOrc.toFixed(0)}%</div><div class="metric-sub">do mandato</div></div>
