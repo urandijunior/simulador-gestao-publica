@@ -425,6 +425,7 @@ async function sincronizarBanco(){
       pontuacao: { total: r.pontuacao, conceito: r.conceito, label: '', eficMedia: r.efic_media, pctOrcamento: r.pct_orcamento, totalComprometido: r.total_comprometido },
       indicadoresPorArea: r.indicadores || {},
       decisoes: r.decisoes || [],
+      feedback_anual: r.feedback_anual || null,
       _id: r.id,
       _created_at: r.created_at,
       _vice: r.vice_prefeito||'',
@@ -844,14 +845,23 @@ function abrirModal(nome){
   document.getElementById('modal-titulo').textContent = a.aluno.nome;
   const areas = ["Saúde","Educação","Turismo","Finanças","Infraestrutura","Logística"];
 
+  // Buscar todos os registros anuais deste aluno para montar histórico de feedbacks
+  const registrosDoAluno = alunos.filter(r => r.aluno.nome === a.aluno.nome);
+  const anuaisDoAluno = registrosDoAluno
+    .filter(r => r._ano_mandato !== null)
+    .sort((x,y) => x._ano_mandato - y._ano_mandato);
+
+  const nivelCor = n => n==='alto'?'var(--green)':n==='medio'?'var(--amber)':'var(--red)';
+  const nivelLabel = n => n==='alto'?'Ano positivo':n==='medio'?'Ano regular':'Ano crítico';
+
   document.getElementById('modal-body').innerHTML = `
     <div class="modal-metrics">
-      <div class="m-met"><div class="m-met-val" style="color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</div><div class="m-met-lbl">Pontuação total</div></div>
+      <div class="m-met"><div class="m-met-val" style="color:${barColor(a.pontuacao.total)}">${a.pontuacao.total}</div><div class="m-met-lbl">Pontuação</div></div>
       <div class="m-met"><div class="m-met-val"><span class="badge-conc c-${a.pontuacao.conceito}">${a.pontuacao.conceito}</span></div><div class="m-met-lbl">Conceito</div></div>
       <div class="m-met"><div class="m-met-val">${a.pontuacao.pctOrcamento}%</div><div class="m-met-lbl">Orçamento usado</div></div>
       <div class="m-met"><div class="m-met-val">${a.pontuacao.eficMedia}</div><div class="m-met-lbl">Efic. média</div></div>
       <div class="m-met"><div class="m-met-val">${a.municipio.nome}</div><div class="m-met-lbl">Município</div></div>
-      <div class="m-met"><div class="m-met-val">${a.aluno.turma||'—'}</div><div class="m-met-lbl">Turma</div></div>
+      <div class="m-met"><div class="m-met-val">${a.aluno.turma||a._vice||'—'}</div><div class="m-met-lbl">Vice / Turma</div></div>
     </div>
 
     <span class="sec-lbl">Indicadores por área</span>
@@ -863,13 +873,47 @@ function abrirModal(nome){
       </div>`).join('')}
     </div>
 
-    <span class="sec-lbl">As 20 decisões</span>
+    ${anuaisDoAluno.length ? `
+    <span class="sec-lbl">Feedback da população — por ano de mandato</span>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:1.25rem">
+      ${anuaisDoAluno.map(reg => {
+        const fb = reg.feedback_anual;
+        if(!fb) return `<div style="background:var(--surface2);border-radius:8px;padding:.75rem 1rem;font-size:12px;color:var(--muted)">Ano ${reg._ano_mandato} — feedback não disponível (respondido antes da atualização)</div>`;
+        const nc = nivelCor(fb.nivel);
+        return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <div style="background:var(--surface2);padding:.625rem 1rem;display:flex;align-items:center;gap:.75rem;border-bottom:1px solid var(--border)">
+            <span style="font-family:Syne,sans-serif;font-weight:800;font-size:12px">Ano ${reg._ano_mandato}</span>
+            <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:${nc};color:#fff;opacity:.9">${nivelLabel(fb.nivel)}</span>
+            <span style="font-size:11px;color:var(--muted);margin-left:auto">${reg.pontuacao.total} pts · Aprovação ${fb.aprovacao_popular||'—'}%</span>
+          </div>
+          <div style="padding:.875rem 1rem;display:flex;flex-direction:column;gap:.75rem">
+            ${fb.depoimentos && fb.depoimentos.length ? `
+            <div>
+              <div style="font-family:Syne,sans-serif;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--hint);margin-bottom:.4rem">Vozes da comunidade</div>
+              ${fb.depoimentos.map(d=>`<div style="font-size:12px;color:var(--muted);font-style:italic;line-height:1.6;padding:.5rem .75rem;background:var(--surface);border-radius:6px;margin-bottom:4px">${d}</div>`).join('')}
+            </div>` : ''}
+            ${fb.citacao_tecnica ? `
+            <div style="background:var(--green-l,#EBF2E2);border-left:3px solid var(--green,#2D5016);border-radius:0 6px 6px 0;padding:.625rem .875rem">
+              <div style="font-family:Syne,sans-serif;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--green,#2D5016);margin-bottom:.3rem">Perspectiva técnica</div>
+              <div style="font-size:12px;color:var(--green,#2D5016);line-height:1.6">${fb.citacao_tecnica}</div>
+            </div>` : ''}
+            ${fb.critica ? `
+            <div style="background:#FFF0F0;border-left:3px solid #B02020;border-radius:0 6px 6px 0;padding:.625rem .875rem">
+              <div style="font-family:Syne,sans-serif;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:#B02020;margin-bottom:.3rem">Ponto de atenção</div>
+              <div style="font-size:12px;color:#7A1A1A;line-height:1.6">${fb.critica}</div>
+            </div>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+
+    <span class="sec-lbl">Decisões registradas</span>
     <div class="dec-list">${a.decisoes.map((d,i)=>{
       const area = Object.keys(AREA_DEC).find(ar=>AREA_DEC[ar].includes(i))||'';
       const badge = AREA_BADGE_MAP[area]||'b-infra';
       const eficColor = d.eficiencia>=80?'var(--green)':d.eficiencia>=60?'var(--amber)':'var(--red)';
       return `<div class="dec-li">
-        <div class="dec-li-n">${i+1}</div>
+        <div class="dec-li-n">${d.numero||i+1}</div>
         <div class="dec-li-info">
           <div class="dec-li-titulo"><span class="area-badge-sm ${badge}">${d.opcaoEscolhida}</span>${d.titulo}</div>
           <div class="dec-li-escolha">${d.tituloEscolha} · <span style="color:${eficColor}">Efic: ${d.eficiencia}/100</span> · R$ ${d.custo.toFixed(1)} mi/ano</div>
