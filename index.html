@@ -5,38 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulador de Gestão Pública — Planejamento Estratégico</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #F5F2EC;
-  --surface: #FFFFFF;
-  --surface2: #F0EDE6;
-  --border: #DDD9CF;
-  --border-strong: #B8B2A4;
-  --text: #1A1814;
-  --text-muted: #6B6660;
-  --text-hint: #9C9790;
-  --accent: #2D5016;
-  --accent-light: #EBF2E2;
-  --accent-mid: #4A8024;
-  --warn: #7A3B00;
-  --warn-light: #FFF0E0;
-  --danger: #7A1A1A;
-  --danger-light: #FFF0F0;
-  --info: #1A3A6B;
-  --info-light: #EBF0FA;
-  --gold: #8B6914;
-  --gold-light: #FDF5E0;
+  /* ── Paleta base ── */
+  --bg: #F4F1E8;
+  --bg-pattern: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C8C0A8' fill-opacity='0.18'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23C8C0A8' stroke-width='0.5' fill='none'/%3E%3C/g%3E%3C/svg%3E");
+  --surface: #FDFAF4;
+  --surface2: #EDE9DF;
+  --surface3: #E4E0D5;
+  --border: #D8D3C6;
+  --border-strong: #B4ADA0;
+  --text: #18160F;
+  --text-muted: #524E46;
+  --text-hint: #928D84;
+
+  /* ── Verde governo ── */
+  --accent: #1E4010;
+  --accent-light: #E6F2DC;
+  --accent-mid: #326B1A;
+  --accent-sat: #3D8020;
+
+  /* ── Semânticas ── */
+  --warn: #6B3600;
+  --warn-light: #FEF3E2;
+  --danger: #6E1414;
+  --danger-light: #FEF0F0;
+  --info: #122E62;
+  --info-light: #E8EFFA;
+  --gold: #7A5008;
+  --gold-light: #FDF4DC;
+  --purple: #2E1060;
+  --purple-light: #EDE8FA;
+
+  /* ── Área badges ── */
+  --saude-bg: #FCEAEA; --saude-fg: #6E1414;
+  --edu-bg: #E8EFF8;   --edu-fg: #122E62;
+  --tur-bg: #E6F2DC;   --tur-fg: #1E4010;
+  --fin-bg: #FDF4DC;   --fin-fg: #7A5008;
+  --infra-bg: #EDE9DF; --infra-fg: #3A3630;
+  --log-bg: #EDE8FA;   --log-fg: #2E1060;
+
+  /* ── Geométricos ── */
   --radius: 10px;
   --radius-lg: 16px;
-  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.06);
+  --radius-xl: 22px;
+
+  /* ── Sombras ── */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --shadow: 0 2px 8px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--bg-pattern);
   color: var(--text);
   min-height: 100vh;
   font-size: 15px;
@@ -51,9 +77,9 @@ h1, h2, h3, h4, .display {
 
 /* ── LAYOUT ── */
 .shell {
-  max-width: 760px;
+  max-width: 780px;
   margin: 0 auto;
-  padding: 2rem 1.25rem 4rem;
+  padding: 2rem 1.5rem 5rem;
 }
 
 .screen { display: none; }
@@ -116,31 +142,52 @@ h1, h2, h3, h4, .display {
 
 /* ── WELCOME ── */
 .welcome-hero {
-  padding: 3rem 0 2rem;
+  padding: 3.5rem 0 2.5rem;
   border-bottom: 1px solid var(--border);
   margin-bottom: 2rem;
+  position: relative;
+}
+.welcome-hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -1.25rem; right: -1.25rem; bottom: 0;
+  background: linear-gradient(180deg, rgba(30,64,16,.04) 0%, transparent 100%);
+  pointer-events: none;
 }
 .welcome-tag {
   font-family: 'Syne', sans-serif;
-  font-size: 11px;
-  letter-spacing: .12em;
+  font-size: 10px;
+  letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--accent-mid);
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 1rem;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.welcome-tag::before {
+  content: '';
+  width: 20px; height: 2px;
+  background: var(--accent-mid);
+  border-radius: 1px;
 }
 .welcome-hero h1 {
-  font-size: clamp(2rem, 5vw, 2.8rem);
-  margin-bottom: .75rem;
-  line-height: 1.1;
+  font-size: clamp(2.1rem, 5vw, 3rem);
+  margin-bottom: .875rem;
+  line-height: 1.08;
+  letter-spacing: -.02em;
+}
+.welcome-hero h1 em {
+  font-style: normal;
+  color: var(--accent-mid);
 }
 .welcome-hero p {
   font-size: 15px;
   color: var(--text-muted);
   max-width: 560px;
-  line-height: 1.7;
-  margin-bottom: 1.5rem;
+  line-height: 1.75;
+  margin-bottom: 1.75rem;
 }
 .rules-grid {
   display: grid;
@@ -151,21 +198,39 @@ h1, h2, h3, h4, .display {
 .rule-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: .875rem 1rem;
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.125rem;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow .2s, transform .15s;
 }
+.rule-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.rule-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-sat) 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .25s;
+}
+.rule-card:hover::after { transform: scaleX(1); }
 .rule-num {
   font-family: 'Syne', sans-serif;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 800;
-  color: var(--border-strong);
-  margin-bottom: 4px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-sat) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
   line-height: 1;
 }
 .rule-text {
   font-size: 12px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 /* ── MUNICÍPIO SELECTION ── */
@@ -181,13 +246,13 @@ h1, h2, h3, h4, .display {
 }
 /* ── MAPA LAYOUT ── */
 .mapa-layout{display:grid;grid-template-columns:1fr 310px;gap:12px;margin-bottom:1.25rem;min-height:480px}
-.mapa-container{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.mapa-container{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow)}
 .mapa-sidebar{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;min-height:480px}
 .mapa-hint{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem 1.5rem;color:var(--text-hint)}
 .mapa-hint p{font-size:12px;line-height:1.6;margin-top:.5rem}
 .mapa-city{display:none;flex-direction:column;flex:1}
 .mapa-city.active{display:flex}
-.mapa-city-hdr{background:var(--text);color:var(--bg);padding:.875rem 1rem;flex-shrink:0}
+.mapa-city-hdr{background:linear-gradient(135deg,#0C1A06 0%,#1A3A0A 60%,#2A4E12 100%);color:var(--bg);padding:.875rem 1rem;flex-shrink:0;position:relative;overflow:hidden}.mapa-city-hdr::after{content:'';position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(80,180,30,.2) 0%,transparent 70%)}
 .mapa-city-tag{font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.45;margin-bottom:.2rem}
 .mapa-city-name{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;margin-bottom:.2rem}
 .mapa-city-sub{font-size:11px;opacity:.55;margin-bottom:.5rem}
@@ -204,9 +269,9 @@ h1, h2, h3, h4, .display {
 .mapa-brief-lbl{font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-hint);display:block;margin-bottom:.25rem}
 .mapa-brief-txt{color:var(--text-muted);line-height:1.55}
 .mapa-prob-strip{background:#FFF0F0;border-left:3px solid #B02020;border-radius:0 5px 5px 0;padding:.45rem .7rem;color:#7A1A1A;line-height:1.5}
-.mapa-select-btn{margin:.75rem;flex-shrink:0;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:.6rem 1rem;border-radius:8px;border:none;background:var(--text);color:var(--bg);cursor:pointer;transition:background .15s}
-.mapa-select-btn:hover{background:#2D2A24}
-.mapa-select-btn.selected{background:var(--accent)}
+.mapa-select-btn{margin:.75rem;flex-shrink:0;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:.65rem 1rem;border-radius:8px;border:none;background:linear-gradient(135deg,#18160F 0%,#2D2A20 100%);color:var(--bg);cursor:pointer;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.mapa-select-btn:hover{box-shadow:0 4px 14px rgba(0,0,0,.22);transform:translateY(-1px)}
+.mapa-select-btn.selected{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-sat) 100%);box-shadow:0 3px 12px rgba(30,64,16,.35)}
 @media(max-width:700px){.mapa-layout{grid-template-columns:1fr}.mapa-sidebar{min-height:400px}}
 .muni-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:1.5rem}
 .muni-card {
@@ -253,24 +318,25 @@ h1, h2, h3, h4, .display {
 .muni-card.selected .muni-briefing { display: block; color: var(--text-muted); }
 
 /* Área badges */
-.b-saude  { background: #FCE8E8; color: #7A1A1A; }
-.b-edu    { background: #E8EEF8; color: #1A3A6B; }
-.b-tur    { background: #E8F4E8; color: #1A5A1A; }
-.b-fin    { background: #FDF5E0; color: #8B6914; }
-.b-infra  { background: #F0EDE6; color: #4A4540; }
-.b-log    { background: #EEE8F8; color: #3A2080; }
+.b-saude  { background: var(--saude-bg); color: var(--saude-fg); border: 1px solid rgba(110,20,20,.12); }
+.b-edu    { background: var(--edu-bg);   color: var(--edu-fg);   border: 1px solid rgba(18,46,98,.12); }
+.b-tur    { background: var(--tur-bg);   color: var(--tur-fg);   border: 1px solid rgba(30,64,16,.14); }
+.b-fin    { background: var(--fin-bg);   color: var(--fin-fg);   border: 1px solid rgba(122,80,8,.12); }
+.b-infra  { background: var(--infra-bg); color: var(--infra-fg); border: 1px solid rgba(58,54,48,.10); }
+.b-log    { background: var(--log-bg);   color: var(--log-fg);   border: 1px solid rgba(46,16,96,.12); }
 
 /* ── DECISÃO ── */
 .budget-strip {
-  background: var(--surface);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: .875rem 1.125rem;
   display: flex;
   gap: 1.5rem;
   margin-bottom: 1.25rem;
   align-items: center;
   flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
 }
 .budget-item { flex: 1; min-width: 120px; }
 .budget-lbl { font-size: 10px; font-family: 'Syne', sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 2px; }
@@ -321,27 +387,43 @@ h1, h2, h3, h4, .display {
   border-radius: var(--radius-lg);
   padding: 1rem 1.125rem;
   cursor: pointer;
-  transition: border-color .15s, box-shadow .15s;
+  transition: border-color .18s, box-shadow .18s, background .15s;
   position: relative;
+  overflow: hidden;
 }
-.opt:hover { border-color: var(--border-strong); }
-.opt.selected { border-color: var(--accent-mid); box-shadow: 0 0 0 2px var(--accent-mid); }
+.opt::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--border);
+  transition: background .18s, width .18s;
+}
+.opt:hover { border-color: var(--border-strong); background: var(--surface2); box-shadow: var(--shadow-sm); }
+.opt:hover::before { background: var(--border-strong); }
+.opt.selected { border-color: var(--accent-mid); box-shadow: 0 0 0 2px var(--accent-mid), var(--shadow); background: var(--accent-light); }
+.opt.selected::before { background: var(--accent-mid); width: 4px; }
 .opt-header { display: flex; align-items: flex-start; gap: .75rem; margin-bottom: .5rem; }
 .opt-letra {
-  width: 28px; height: 28px;
-  border-radius: 50%;
+  width: 30px; height: 30px;
+  border-radius: 8px;
   background: var(--surface2);
   border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Syne', sans-serif;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 13px;
   flex-shrink: 0;
   transition: background .15s, border-color .15s, color .15s;
 }
-.opt.selected .opt-letra { background: var(--accent-mid); border-color: var(--accent-mid); color: #fff; }
-.opt-titulo { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; padding-top: 3px; flex: 1; }
-.opt-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: .625rem; }
+.opt.selected .opt-letra {
+  background: var(--accent-mid);
+  border-color: var(--accent-mid);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(50,107,26,.35);
+}
+.opt-titulo { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; padding-top: 4px; flex: 1; }
+.opt-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.62; margin-bottom: .625rem; }
 .opt-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: .625rem; }
 .meta-pill {
   font-size: 10px;
@@ -356,15 +438,23 @@ h1, h2, h3, h4, .display {
 .m-efic-md { background: var(--gold-light); color: var(--gold); }
 .m-efic-lo { background: var(--danger-light); color: var(--danger); }
 .just {
-  background: var(--surface2);
-  border-left: 3px solid var(--border-strong);
-  border-radius: 0 6px 6px 0;
-  padding: .625rem .875rem;
+  background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
+  border-left: 3px solid var(--accent-mid);
+  border-radius: 0 8px 8px 0;
+  padding: .7rem 1rem;
   font-size: 11.5px;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.62;
+  position: relative;
 }
-.just strong { color: var(--text); font-weight: 500; }
+.just::before {
+  content: '📚';
+  position: absolute;
+  right: .75rem; top: .6rem;
+  font-size: 13px;
+  opacity: .35;
+}
+.just strong { color: var(--accent); font-weight: 600; }
 .impacts { display: flex; gap: 5px; flex-wrap: wrap; margin-top: .5rem; }
 .impact {
   font-size: 10px;
@@ -387,42 +477,55 @@ h1, h2, h3, h4, .display {
 }
 .btn {
   font-family: 'Syne', sans-serif;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 13px;
   letter-spacing: .03em;
-  padding: .6rem 1.25rem;
+  padding: .6rem 1.35rem;
   border-radius: 8px;
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
-  transition: all .15s;
+  transition: all .18s;
+  box-shadow: var(--shadow-sm);
 }
-.btn:hover { background: var(--surface2); }
-.btn:disabled { opacity: .35; cursor: not-allowed; }
+.btn:hover { background: var(--surface2); box-shadow: var(--shadow); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
+.btn:disabled { opacity: .35; cursor: not-allowed; transform: none; box-shadow: none; }
 .btn-primary {
-  background: var(--text);
+  background: linear-gradient(135deg, #18160F 0%, #2D2A20 100%);
   color: var(--bg);
-  border-color: var(--text);
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18), 0 1px 2px rgba(0,0,0,.1);
 }
-.btn-primary:hover { background: #2D2A24; }
-.btn-primary:disabled { opacity: .35; cursor: not-allowed; }
+.btn-primary:hover { background: linear-gradient(135deg, #2D2A20 0%, #3D3A30 100%); box-shadow: 0 4px 14px rgba(0,0,0,.22); }
+.btn-primary:disabled { opacity: .35; cursor: not-allowed; transform: none; }
 .btn-accent {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-mid) 100%);
   color: #fff;
-  border-color: var(--accent);
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(30,64,16,.30);
 }
-.btn-accent:hover { background: var(--accent-mid); }
+.btn-accent:hover { background: linear-gradient(135deg, var(--accent-mid) 0%, var(--accent-sat) 100%); box-shadow: 0 4px 14px rgba(30,64,16,.35); }
 
 /* ── RESULTADO ── */
 .result-hero {
-  background: var(--text);
+  background: linear-gradient(135deg, #0C1A06 0%, #1A3A0A 50%, #253D10 100%);
   color: var(--bg);
-  border-radius: var(--radius-lg);
-  padding: 2rem;
+  border-radius: var(--radius-xl);
+  padding: 2rem 2rem 1.75rem;
   margin-bottom: 1.25rem;
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.result-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(80,180,30,.18) 0%, transparent 70%);
 }
 .result-hero::after {
   content: attr(data-letter);
@@ -433,8 +536,9 @@ h1, h2, h3, h4, .display {
   font-family: 'Syne', sans-serif;
   font-weight: 800;
   font-size: 8rem;
-  opacity: .08;
+  opacity: .07;
   line-height: 1;
+  color: #fff;
 }
 .result-muni { font-size: 12px; opacity: .5; margin-bottom: .5rem; font-family: 'Syne', sans-serif; letter-spacing: .06em; text-transform: uppercase; }
 .result-class { font-family: 'Syne', sans-serif; font-size: 1.75rem; font-weight: 800; margin-bottom: .5rem; }
@@ -566,6 +670,14 @@ h1, h2, h3, h4, .display {
 <body>
 
 <header class="site-header">
+  <div class="logo-icon">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="1" y="8" width="3" height="7" rx="1" fill="white" opacity=".9"/>
+      <rect x="6" y="5" width="3" height="10" rx="1" fill="white" opacity=".9"/>
+      <rect x="11" y="2" width="3" height="13" rx="1" fill="white" opacity=".9"/>
+      <path d="M2 7L7 4L12 1" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity=".6"/>
+    </svg>
+  </div>
   <div class="logo">Simulador de Gestão Pública</div>
   <div class="sub">Planejamento Estratégico · Administração Pública</div>
 </header>
@@ -584,7 +696,7 @@ h1, h2, h3, h4, .display {
   <div id="s-welcome" class="screen active">
     <div class="welcome-hero">
       <span class="welcome-tag">Exercício interdisciplinar</span>
-      <h1>Você é o novo gestor.<br>O município espera.</h1>
+      <h1>Você é o novo gestor.<br><em>O município espera.</em></h1>
       <p>Neste exercício, você assumirá a prefeitura de um município fictício com desafios reais de gestão pública. Suas 20 decisões definirão o futuro da cidade ao longo de um mandato de 4 anos.</p>
       <p style="margin-bottom:0">As decisões devem ser fundamentadas em teoria e prática da Administração Pública e do Planejamento Estratégico. Cada escolha tem impacto orçamentário, social e institucional.</p>
     </div>
@@ -592,27 +704,27 @@ h1, h2, h3, h4, .display {
     <span class="section-label">Como funciona</span>
     <div class="rules-grid">
       <div class="rule-card">
-        <div class="rule-num">01</div>
+        <div class="rule-num" style="font-size:20px">🗺️</div>
         <div class="rule-text">Escolha um município com problema central específico</div>
       </div>
       <div class="rule-card">
-        <div class="rule-num">02</div>
+        <div class="rule-num" style="font-size:20px">📋</div>
         <div class="rule-text">Leia o briefing completo antes de tomar qualquer decisão</div>
       </div>
       <div class="rule-card">
-        <div class="rule-num">03</div>
+        <div class="rule-num" style="font-size:20px">⚖️</div>
         <div class="rule-text">Responda as 20 decisões sequencialmente, gerenciando o orçamento</div>
       </div>
       <div class="rule-card">
-        <div class="rule-num">04</div>
+        <div class="rule-num" style="font-size:20px">💰</div>
         <div class="rule-text">Cada escolha tem custo fixo anual descontado da receita do mandato</div>
       </div>
       <div class="rule-card">
-        <div class="rule-num">05</div>
+        <div class="rule-num" style="font-size:20px">📊</div>
         <div class="rule-text">A melhor combinação de eficiência + equilíbrio fiscal gera maior pontuação</div>
       </div>
       <div class="rule-card">
-        <div class="rule-num">06</div>
+        <div class="rule-num" style="font-size:20px">🏆</div>
         <div class="rule-text">Ao final, você recebe resultado por área e narrativa do mandato</div>
       </div>
     </div>
@@ -666,6 +778,15 @@ h1, h2, h3, h4, .display {
     <div class="mapa-layout">
       <div class="mapa-container">
         <svg id="brasil-svg" viewBox="0 0 520 560" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;min-height:420px">
+          <defs>
+            <filter id="dot-shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1E4010" flood-opacity="0.3"/>
+            </filter>
+            <style>
+              .pulse-ring { animation: mapPulse 2.5s ease-in-out infinite; transform-origin: center; }
+              @keyframes mapPulse { 0%,100%{opacity:.08;r:16} 50%{opacity:.18;r:19} }
+            </style>
+          </defs>
           <rect width="520" height="560" fill="#C8DDE8"/>
           <path d="M 50 50 L 290 45 L 310 75 L 320 120 L 295 158 L 255 172 L 210 185 L 160 195 L 110 185 L 75 158 L 58 118 Z" fill="#D8D0B8" stroke="#B8B0A0" stroke-width=".8"/>
           <path d="M 290 45 L 390 50 L 425 82 L 432 132 L 405 168 L 368 185 L 330 195 L 295 178 L 255 172 L 295 158 L 320 120 L 310 75 Z" fill="#DDD5BC" stroke="#B8B0A0" stroke-width=".8"/>
@@ -690,7 +811,8 @@ h1, h2, h3, h4, .display {
           <text x="70" y="544" font-family="Syne,sans-serif" font-size="8" fill="#9C9488" text-anchor="middle">~800 km</text>
           <!-- Serraventosa MG -->
           <g style="cursor:pointer" onclick="selecionarMuni(0)">
-            <circle id="mo-0" cx="295" cy="330" r="11" fill="white" stroke="#2D5016" stroke-width="2.5"/>
+            <circle cx="295" cy="330" r="16" fill="#2D5016" opacity=".08" class="pulse-ring"/>
+            <circle id="mo-0" cx="295" cy="330" r="11" fill="white" stroke="#2D5016" stroke-width="2.5" filter="url(#dot-shadow)"/>
             <circle id="mi-0" cx="295" cy="330" r="5" fill="#2D5016"/>
             <text x="295" y="318" font-family="Syne,sans-serif" font-size="8" fill="#1C1A16" text-anchor="middle" font-weight="600">Serraventosa</text>
             <text x="295" y="308" font-family="Syne,sans-serif" font-size="7" fill="#9C9488" text-anchor="middle">MG</text>
@@ -1033,6 +1155,17 @@ const DECISOES = [
     ]}
 ];
 
+
+// ── ÍCONES SVG POR ÁREA ──
+const AREA_ICONES = {
+  "Saúde": `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="6" y="1" width="2" height="12" rx="1" fill="currentColor"/><rect x="1" y="6" width="12" height="2" rx="1" fill="currentColor"/></svg>`,
+  "Educação": `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2L13 5.5V6L7 9.5L1 6V5.5L7 2Z" fill="currentColor" opacity=".9"/><path d="M3 7.5V10.5C3 10.5 5 12 7 12C9 12 11 10.5 11 10.5V7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>`,
+  "Turismo": `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="6" r="3" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M7 9V13M5 13H9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M7 1V3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  "Finanças": `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M1 6H13" stroke="currentColor" stroke-width="1.2"/><circle cx="4.5" cy="8.5" r="1" fill="currentColor"/></svg>`,
+  "Infraestrutura": `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 12L4 5L7 9L9 7L13 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="9" cy="4" r="1.5" fill="currentColor"/></svg>`,
+  "Logística": `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="5" width="8" height="6" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M9 7H11L13 9V11H9V7Z" stroke="currentColor" stroke-width="1.3" fill="none"/><circle cx="3.5" cy="11.5" r="1" fill="currentColor"/><circle cx="11" cy="11.5" r="1" fill="currentColor"/></svg>`
+};
+
 const AREA_BADGE = {
   "Saúde":"b-saude","Educação":"b-edu","Turismo":"b-tur",
   "Finanças":"b-fin","Infraestrutura":"b-infra","Logística":"b-log"
@@ -1049,6 +1182,55 @@ let alunoVice = '';
 let alunoTurma = '';
 let anoAtual = 1; // 1 a 4
 let resultadosAnuais = {}; // { 1: {...}, 2: {...}, ... }
+
+// ══ RASCUNHO (localStorage) ══════════════════════════════════
+const RASCUNHO_KEY = 'sgp_rascunho_v1';
+
+function salvarRascunho(){
+  if(muniIdx === null) return;
+  try {
+    const estado = {
+      alunoNome, alunoVice, alunoTurma,
+      muniIdx, anoAtual, decAtual,
+      respostas,
+      resultadosAnuais,
+      salvoEm: new Date().toISOString()
+    };
+    localStorage.setItem(RASCUNHO_KEY, JSON.stringify(estado));
+  } catch(e){ console.warn('Rascunho: erro ao salvar', e); }
+}
+
+function carregarRascunho(){
+  try {
+    const raw = localStorage.getItem(RASCUNHO_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  } catch(e){ return null; }
+}
+
+function limparRascunho(){
+  try { localStorage.removeItem(RASCUNHO_KEY); } catch(e){}
+}
+
+function temRascunho(){
+  const r = carregarRascunho();
+  return r && r.alunoNome && r.muniIdx !== null && r.respostas && r.respostas.some(x=>x!==null);
+}
+
+function restaurarRascunho(){
+  const r = carregarRascunho();
+  if(!r) return;
+  alunoNome = r.alunoNome || '';
+  alunoVice = r.alunoVice || '';
+  alunoTurma = r.alunoTurma || '';
+  muniIdx = r.muniIdx;
+  anoAtual = r.anoAtual || 1;
+  decAtual = r.decAtual || DECISOES_POR_ANO[1][0];
+  respostas = r.respostas || new Array(DECISOES.length).fill(null);
+  resultadosAnuais = r.resultadosAnuais || {};
+}
+
+// ═════════════════════════════════════════════════════════════
 // Mapeamento de decisões por ano (5 por ano, misto de áreas)
 const DECISOES_POR_ANO = {
   1: [0, 5, 6, 8, 13],   // Saúde básica, Fiscal, Folha, Viário, Epidemiologia
@@ -1106,6 +1288,43 @@ const PLANTAS = {
 
 // Substituir funções
 function renderMunis(){} // agora o mapa faz o trabalho
+
+// Verificar rascunho ao carregar
+function verificarRascunhoInicial(){
+  if(!temRascunho()) return;
+  const r = carregarRascunho();
+  const m = MUNICIPIOS[r.muniIdx];
+  const decisoesFeitas = r.respostas.filter(x=>x!==null).length;
+  const salvoEm = r.salvoEm ? new Date(r.salvoEm).toLocaleString('pt-BR') : '';
+  const anoLabel = r.anoAtual ? `Ano ${r.anoAtual} de 4` : '';
+  document.getElementById('banner-rascunho').style.display = 'block';
+  document.getElementById('banner-rascunho-info').innerHTML =
+    `<strong>${r.alunoNome}</strong> & <strong>${r.alunoVice}</strong> — ${m?m.nome:'?'} · ${decisoesFeitas} de 20 decisões respondidas · ${anoLabel}` +
+    (salvoEm ? `<br><span style="font-size:11px;opacity:.7">Salvo em ${salvoEm}</span>` : '');
+}
+
+function continuarRascunho(){
+  restaurarRascunho();
+  document.getElementById('banner-rascunho').style.display = 'none';
+  // Restaurar campos de identificação
+  const inNome = document.getElementById('inp-nome');
+  const inVice = document.getElementById('inp-vice');
+  const inTurma = document.getElementById('inp-turma');
+  if(inNome) inNome.value = alunoNome;
+  if(inVice) inVice.value = alunoVice;
+  if(inTurma) inTurma.value = alunoTurma;
+  // Ir direto para as decisões
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('prog-muni').textContent = MUNICIPIOS[muniIdx].nome;
+  _atualizarMapaDot(muniIdx);
+  setScreen('s-decisoes');
+  renderDecisao();
+}
+
+function descartarRascunho(){
+  limparRascunho();
+  document.getElementById('banner-rascunho').style.display = 'none';
+}
 function selecionarMuni(i){
   muniIdx = i;
   _atualizarMapaDot(i);
@@ -1187,6 +1406,7 @@ function renderDecisao(){
   const prog = Math.round(((anoAtual-1)*5 + posNoAno) / 20 * 100);
   document.getElementById('prog-fill').style.width = prog+'%';
   document.getElementById('prog-label').textContent = `Ano ${anoAtual} · Decisão ${posNoAno} de 5`;
+  document.getElementById('prog-muni').textContent = `${MUNICIPIOS[muniIdx].nome} · Prefeito(a) ${alunoNome}`;
 
   let html = `
   <div style="padding:1.5rem 0 1rem">
@@ -1207,7 +1427,7 @@ function renderDecisao(){
 
   <div class="dec-header">
     <div class="dec-breadcrumb">
-      <span class="area-pill ${AREA_BADGE[d.area]}">${d.area}</span>
+      <span class="area-pill ${AREA_BADGE[d.area]}" style="display:inline-flex;align-items:center;gap:5px">${AREA_ICONES[d.area]||''}${d.area}</span>
       <span class="prazo-pill">${d.prazo}</span>
       <span class="dec-num">${decAtual+1} / ${DECISOES.length}</span>
     </div>
@@ -1267,7 +1487,7 @@ function renderDecisao(){
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function escolher(i){ respostas[decAtual]=i; renderDecisao(); }
+function escolher(i){ respostas[decAtual]=i; salvarRascunho(); renderDecisao(); }
 function avancarDec(){
   const idxAno = DECISOES_POR_ANO[anoAtual];
   const pos = idxAno.indexOf(decAtual);
@@ -1358,8 +1578,19 @@ function gerarFeedbackAnual(ano, pts){
 }
 
 async function salvarAnoSupabase(ano, pts, feedback){
+  console.log('[Supabase] Iniciando salvamento do Ano', ano);
   try{
     const m = MUNICIPIOS[muniIdx];
+
+    // Verificar se respostas do ano estão todas preenchidas
+    const idxsAno = DECISOES_POR_ANO[ano];
+    const respostasAno = idxsAno.map(i => respostas[i]);
+    const faltando = respostasAno.filter(r => r === null);
+    if(faltando.length > 0){
+      console.error('[Supabase] ERRO: respostas faltando para o ano', ano, faltando);
+      return;
+    }
+
     const body = {
       nome_aluno: alunoNome,
       turma: alunoTurma||'',
@@ -1372,7 +1603,15 @@ async function salvarAnoSupabase(ano, pts, feedback){
       efic_media: pts.eficMedia,
       total_comprometido: parseFloat(pts.somaCusto),
       indicadores: feedback.indics,
-      decisoes: DECISOES_POR_ANO[ano].map(i=>({
+      feedback_anual: {
+        nivel: feedback.nivel,
+        depoimentos: feedback.deps,
+        citacao_tecnica: feedback.cit,
+        critica: feedback.critica,
+        aprovacao_popular: feedback.indics.aprovacao,
+        satisfacao_servicos: feedback.indics.satisfacaoServicos
+      },
+      decisoes: idxsAno.map(i=>({
         numero:i+1, area:DECISOES[i].area, titulo:DECISOES[i].titulo,
         opcaoEscolhida:DECISOES[i].opcoes[respostas[i]].letra,
         tituloEscolha:DECISOES[i].opcoes[respostas[i]].titulo,
@@ -1382,12 +1621,38 @@ async function salvarAnoSupabase(ano, pts, feedback){
       vice_prefeito: alunoVice,
       ano_mandato: ano
     };
-    await fetch(SUPA_URL+'/rest/v1/respostas',{
+
+    console.log('[Supabase] Body a enviar:', JSON.stringify(body).substring(0,200));
+
+    const res = await fetch(SUPA_URL+'/rest/v1/respostas',{
       method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':SUPA_KEY,
+        'Authorization':'Bearer '+SUPA_KEY,
+        'Prefer':'return=minimal'
+      },
       body:JSON.stringify(body)
     });
-  }catch(e){ console.warn('Supabase save ano',ano,e); }
+
+    console.log('[Supabase] Resposta HTTP:', res.status, res.statusText);
+
+    if(!res.ok){
+      const errText = await res.text();
+      console.error('[Supabase] Erro do servidor:', errText);
+
+      // Tentar identificar o problema
+      if(res.status === 401) console.error('[Supabase] Problema: chave de API inválida ou expirada');
+      if(res.status === 403) console.error('[Supabase] Problema: política RLS bloqueando inserção');
+      if(res.status === 422) console.error('[Supabase] Problema: campo obrigatório faltando ou tipo errado');
+      if(res.status === 404) console.error('[Supabase] Problema: tabela "respostas" não encontrada');
+    } else {
+      console.log('[Supabase] ✓ Ano', ano, 'salvo com sucesso!');
+    }
+
+  }catch(e){
+    console.error('[Supabase] Erro de rede ou JS:', e.message, e);
+  }
 }
 
 function fecharAno(){
@@ -1464,6 +1729,7 @@ function mostrarBalancoAnual(ano, pts, feedback){
 function iniciarAno(ano){
   anoAtual = ano;
   decAtual = DECISOES_POR_ANO[ano][0];
+  salvarRascunho();
   renderDecisao();
 }
 
@@ -1602,7 +1868,7 @@ function mostrarResultadoFinal(){
   <div class="ind-grid">
     ${areas.map(a=>`
     <div class="ind-card">
-      <div class="ind-nome">${a}</div>
+      <div class="ind-nome">${AREA_ICONES[a]||''}${a}</div>
       <div class="ind-val" style="color:${getBarColor(pts.porArea[a])}">${pts.porArea[a]}</div>
       <div class="ind-bar-t"><div class="ind-bar-f" style="width:${pts.porArea[a]}%;background:${getBarColor(pts.porArea[a])}"></div></div>
     </div>`).join('')}
@@ -1674,7 +1940,7 @@ function mostrarResultado(){
   <div class="ind-grid">
     ${areas.map(a=>`
     <div class="ind-card">
-      <div class="ind-nome">${a}</div>
+      <div class="ind-nome">${AREA_ICONES[a]||''}${a}</div>
       <div class="ind-val" style="color:${getBarColor(pts.porArea[a])}">${pts.porArea[a]}</div>
       <div class="ind-bar-t"><div class="ind-bar-f" style="width:${pts.porArea[a]}%;background:${getBarColor(pts.porArea[a])}"></div></div>
     </div>`).join('')}
@@ -1750,6 +2016,7 @@ async function enviarSupabase(){
   const status = document.getElementById('envio-status');
   if(!btn||!status) return;
   btn.disabled = true;
+  limparRascunho(); // exercício completo — rascunho não é mais necessário
   btn.textContent = 'Enviando...';
   status.style.display = 'block';
   status.style.color = 'var(--text-muted)';
@@ -1799,6 +2066,7 @@ async function enviarSupabase(){
 }
 
 function reiniciar(){
+  limparRascunho();
   muniIdx=null; decAtual=0; respostas=new Array(DECISOES.length).fill(null);
   for(let j=0;j<10;j++){
     const o=document.getElementById('mo-'+j), n=document.getElementById('mi-'+j);
@@ -1810,6 +2078,11 @@ function reiniciar(){
   document.getElementById('btn-iniciar').disabled=true;
   showWelcome();
 }
+
+// Verificar rascunho quando a página carregar
+document.addEventListener('DOMContentLoaded', function(){
+  verificarRascunhoInicial();
+});
 </script>
 </body>
 </html>
