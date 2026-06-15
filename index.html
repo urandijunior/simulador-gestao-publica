@@ -926,7 +926,7 @@ h1, h2, h3, h4, .display {
 
 </div><!-- /shell -->
 
-<script>
+<script type="module">
 // ══ DADOS ══════════════════════════════════════════════════════════════════
 
 const MUNICIPIOS = [
@@ -1172,9 +1172,38 @@ const AREA_BADGE = {
 };
 
 
-// ══ SUPABASE ══
-const SUPA_URL = 'https://tukzhkgvqiecfwvxnlkj.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1a3poa2d2cWllY2Z3dnhubGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTUzMTgsImV4cCI6MjA5NjA5MTMxOH0.RNKDD8RA56oTfVzCaoGDOrE_fDVQo-kXFiLPkM9D1jQ';
+
+// ══ FIREBASE ══════════════════════════════════════════════════
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAXCXYee13xFTJKHZ7ypzCUHf2Oj4I4CuI",
+  authDomain: "simulador-gestao-publica.firebaseapp.com",
+  projectId: "simulador-gestao-publica",
+  storageBucket: "simulador-gestao-publica.firebasestorage.app",
+  messagingSenderId: "309606282926",
+  appId: "1:309606282926:web:11d70168f29df91fd8df3f"
+};
+
+const _fbApp = initializeApp(firebaseConfig);
+const _db = getFirestore(_fbApp);
+
+async function salvarFirebase(dados){
+  try {
+    await addDoc(collection(_db, 'respostas'), {
+      ...dados,
+      created_at: serverTimestamp()
+    });
+    console.log('[Firebase] ✓ Salvo com sucesso');
+    return true;
+  } catch(e) {
+    console.error('[Firebase] Erro:', e);
+    return false;
+  }
+}
+// ═════════════════════════════════════════════════════════════
+
 // ══ ESTADO ══
 let muniIdx = null;
 let alunoNome = '';
@@ -2016,16 +2045,17 @@ async function enviarSupabase(){
   const status = document.getElementById('envio-status');
   if(!btn||!status) return;
   btn.disabled = true;
-  limparRascunho(); // exercício completo — rascunho não é mais necessário
+  limparRascunho();
   btn.textContent = 'Enviando...';
   status.style.display = 'block';
   status.style.color = 'var(--text-muted)';
-  status.textContent = 'Conectando ao banco de dados...';
+  status.textContent = 'Registrando resultado final...';
   try {
     const p = gerarPayload();
-    const body = {
+    const ok = await salvarFirebase({
       nome_aluno: p.aluno.nome,
-      turma: p.aluno.turma || '',
+      vice_prefeito: alunoVice,
+      turma: p.aluno.turma||'',
       municipio: p.municipio.nome,
       municipio_estado: p.municipio.estado,
       municipio_problema: p.municipio.problema,
@@ -2035,33 +2065,21 @@ async function enviarSupabase(){
       efic_media: p.pontuacao.eficMedia,
       total_comprometido: p.pontuacao.totalComprometido,
       indicadores: p.indicadoresPorArea,
-      decisoes: p.decisoes
-    };
-    const res = await fetch(SUPA_URL + '/rest/v1/respostas', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(body)
+      decisoes: p.decisoes,
+      ano_mandato: null
     });
-    if(res.ok || res.status === 201){
+    if(ok){
       btn.textContent = '✓ Resultado enviado!';
       btn.style.background = 'var(--accent)';
       status.style.color = 'var(--accent)';
-      status.textContent = 'Seu resultado foi registrado com sucesso. O professor já pode visualizá-lo no painel.';
-    } else {
-      const err = await res.text();
-      throw new Error(err);
-    }
+      status.textContent = 'Resultado registrado com sucesso. O professor já pode visualizá-lo no painel.';
+    } else { throw new Error('Falha ao salvar'); }
   } catch(e){
     btn.disabled = false;
     btn.textContent = '✉ Enviar resultado ao professor';
     status.style.color = 'var(--danger)';
-    status.textContent = 'Erro ao enviar. Tente novamente ou baixe o JSON e envie por e-mail.';
-    console.error('Supabase error:', e);
+    status.textContent = 'Erro ao enviar. Tente novamente ou baixe o JSON.';
+    console.error('[Firebase] enviar erro:', e);
   }
 }
 

@@ -382,10 +382,25 @@ td{padding:.6rem .875rem;vertical-align:middle}
   </div>
 </div>
 
-<script>
-// ══ SUPABASE ══
-const SUPA_URL = 'https://tukzhkgvqiecfwvxnlkj.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1a3poa2d2cWllY2Z3dnhubGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTUzMTgsImV4cCI6MjA5NjA5MTMxOH0.RNKDD8RA56oTfVzCaoGDOrE_fDVQo-kXFiLPkM9D1jQ';
+<script type="module">
+
+// ══ FIREBASE ══════════════════════════════════════════════════
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAXCXYee13xFTJKHZ7ypzCUHf2Oj4I4CuI",
+  authDomain: "simulador-gestao-publica.firebaseapp.com",
+  projectId: "simulador-gestao-publica",
+  storageBucket: "simulador-gestao-publica.firebasestorage.app",
+  messagingSenderId: "309606282926",
+  appId: "1:309606282926:web:11d70168f29df91fd8df3f"
+};
+
+const _fbApp = initializeApp(firebaseConfig);
+const _db = getFirestore(_fbApp);
+// ═════════════════════════════════════════════════════════════
+
 
 // ══ ESTADO ══════════════════════════════════════════════════════════════════
 let alunos = [];
@@ -398,9 +413,8 @@ async function sincronizarBanco(){
   icon.textContent = '↻';
   icon.style.animation = 'spin 1s linear infinite';
   status.className = 'sync-status loading';
-  status.textContent = 'Buscando respostas...';
+  status.textContent = 'Buscando respostas no Firebase...';
 
-  // Adicionar animação de spin
   if(!document.getElementById('spin-style')){
     const s = document.createElement('style');
     s.id = 'spin-style';
@@ -409,53 +423,40 @@ async function sincronizarBanco(){
   }
 
   try {
-    const res = await fetch(SUPA_URL + '/rest/v1/respostas?select=*&order=created_at.desc', {
-      headers: {
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY
-      }
-    });
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const rows = await res.json();
+    const q = query(collection(_db, 'respostas'), orderBy('created_at', 'desc'));
+    const snapshot = await getDocs(q);
+    const rows = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // Converter formato Supabase → formato interno
+    // Converter formato Firebase → formato interno
     const novos = rows.map(r => ({
-      aluno: { nome: r.nome_aluno, turma: r.turma || '', vice: r.vice_prefeito||'' },
-      municipio: { nome: r.municipio, estado: r.municipio_estado||'', problema: r.municipio_problema||'' },
-      pontuacao: { total: r.pontuacao, conceito: r.conceito, label: '', eficMedia: r.efic_media, pctOrcamento: r.pct_orcamento, totalComprometido: r.total_comprometido },
-      indicadoresPorArea: r.indicadores || {},
-      decisoes: r.decisoes || [],
-      feedback_anual: r.feedback_anual || null,
+      aluno: { nome: r.nome_aluno||'', turma: r.turma||'', vice: r.vice_prefeito||'' },
+      municipio: { nome: r.municipio||'', estado: r.municipio_estado||'', problema: r.municipio_problema||'' },
+      pontuacao: { total: r.pontuacao||0, conceito: r.conceito||'C', label:'', eficMedia: r.efic_media||0, pctOrcamento: r.pct_orcamento||0, totalComprometido: r.total_comprometido||0 },
+      indicadoresPorArea: r.indicadores||{},
+      decisoes: r.decisoes||[],
+      feedback_anual: r.feedback_anual||null,
       _id: r.id,
-      _created_at: r.created_at,
+      _created_at: r.created_at ? (r.created_at.toDate ? r.created_at.toDate().toISOString() : r.created_at) : null,
       _vice: r.vice_prefeito||'',
-      _ano_mandato: r.ano_mandato||null
+      _ano_mandato: r.ano_mandato !== undefined ? r.ano_mandato : null
     }));
 
-    // Merge correto:
-    // - Registros com ano_mandato (1-4): guardar TODOS, identificar por nome+ano
-    // - Registros sem ano_mandato (null): resultado final, 1 por nome
+    // Merge: anuais por nome+ano, finais por nome
     novos.forEach(novo => {
       const ehAnual = novo._ano_mandato !== null;
       if(ehAnual){
-        // Anual: deduplica por nome+ano (substitui se já existir esse ano)
-        const idx = alunos.findIndex(a =>
-          a.aluno.nome === novo.aluno.nome && a._ano_mandato === novo._ano_mandato
-        );
-        if(idx >= 0) alunos[idx] = novo; else alunos.push(novo);
+        const idx = alunos.findIndex(a => a.aluno.nome===novo.aluno.nome && a._ano_mandato===novo._ano_mandato);
+        if(idx>=0) alunos[idx]=novo; else alunos.push(novo);
       } else {
-        // Final (null): deduplica só pelo nome
-        const idx = alunos.findIndex(a =>
-          a.aluno.nome === novo.aluno.nome && a._ano_mandato === null
-        );
-        if(idx >= 0) alunos[idx] = novo; else alunos.push(novo);
+        const idx = alunos.findIndex(a => a.aluno.nome===novo.aluno.nome && a._ano_mandato===null);
+        if(idx>=0) alunos[idx]=novo; else alunos.push(novo);
       }
     });
 
     icon.style.animation = '';
     icon.textContent = '✓';
     status.className = 'sync-status ok';
-    status.innerHTML = `<span class="live-dot" style="display:inline-block;margin-right:4px"></span> ${alunos.length} resultado${alunos.length!==1?'s':''} carregado${alunos.length!==1?'s':''} — última atualização: ${new Date().toLocaleTimeString('pt-BR')}`;
+    status.innerHTML = `<span class="live-dot" style="display:inline-block;margin-right:4px"></span> ${alunos.length} registro${alunos.length!==1?'s':''} carregado${alunos.length!==1?'s':''} — ${new Date().toLocaleTimeString('pt-BR')}`;
     btn.disabled = false;
     btn.querySelector('span').textContent = '↻';
     renderTudo();
@@ -463,9 +464,9 @@ async function sincronizarBanco(){
     icon.style.animation = '';
     icon.textContent = '↻';
     status.className = 'sync-status err';
-    status.textContent = 'Erro ao conectar: ' + e.message + '. Verifique a conexão e tente novamente.';
+    status.textContent = 'Erro Firebase: ' + e.message;
     btn.disabled = false;
-    console.error(e);
+    console.error('[Firebase]', e);
   }
 }
 
