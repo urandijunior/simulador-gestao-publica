@@ -1052,6 +1052,21 @@ function barColor(v){
   v = parseFloat(v);
   return v>=80?'#2D5016':v>=65?'#8B6914':'#7A1A1A';
 }
+
+document.addEventListener('DOMContentLoaded', () => { /* pronto */ });
+// ══ EXPOR FUNÇÕES GLOBAIS (necessário com type="module") ══
+window.sincronizarBanco = sincronizarBanco;
+window.onFileInput      = onFileInput;
+window.exportCSV        = exportCSV;
+window.limparTudo       = limparTudo;
+window.showTab          = showTab;
+window.fecharModal      = fecharModal;
+window.abrirModal       = abrirModal;
+window.renderTabelaAlunos = renderTabelaAlunos;
+window.ev               = ev;
+window.onDrop           = onDrop;
+// ═════════════════════════════════════════════════════════
+
 </script>
 </body>
 </html>
